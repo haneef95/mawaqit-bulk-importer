@@ -1,0 +1,418 @@
+#mawaqit-importer-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #00d9ff, #00ff88);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 217, 255, 0.4);
+    z-index: 999998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#mawaqit-importer-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 30px rgba(0, 217, 255, 0.6);
+}
+
+#mawaqit-importer-toggle svg {
+    width: 28px;
+    height: 28px;
+    stroke: #1a1a2e;
+    stroke-width: 2;
+    fill: none;
+}
+
+#mawaqit-importer-panel {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 400px;
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 140px);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 999999;
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#mawaqit-importer-panel.show {
+    display: flex;
+    animation: mawaqit-slideIn 0.3s ease;
+}
+
+@keyframes mawaqit-slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+#mawaqit-importer-panel * {
+    box-sizing: border-box;
+}
+
+.mawaqit-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mawaqit-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    background: linear-gradient(90deg, #00d9ff, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mawaqit-close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.mawaqit-close-btn:hover {
+    background: rgba(255, 71, 87, 0.3);
+}
+
+.mawaqit-close-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: #e4e4e4;
+    stroke-width: 2;
+}
+
+.mawaqit-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    color: #e4e4e4;
+}
+
+.mawaqit-section {
+    margin-bottom: 20px;
+}
+
+.mawaqit-section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #00d9ff;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.mawaqit-radio-group {
+    display: flex;
+    gap: 10px;
+}
+
+.mawaqit-radio-option {
+    flex: 1;
+}
+
+.mawaqit-radio-option input[type="radio"] {
+    display: none;
+}
+
+.mawaqit-radio-option label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #e4e4e4;
+}
+
+.mawaqit-radio-option input[type="radio"]:checked + label {
+    background: rgba(0, 217, 255, 0.15);
+    border-color: #00d9ff;
+}
+
+.mawaqit-radio-option label:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.mawaqit-file-upload {
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.mawaqit-file-upload:hover,
+.mawaqit-file-upload.dragover {
+    border-color: #00d9ff;
+    background: rgba(0, 217, 255, 0.05);
+}
+
+.mawaqit-file-upload input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.mawaqit-upload-icon {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 10px;
+    background: linear-gradient(135deg, #00d9ff, #00ff88);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mawaqit-upload-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: #1a1a2e;
+    stroke-width: 2;
+    fill: none;
+}
+
+.mawaqit-upload-text {
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    color: #e4e4e4;
+}
+
+.mawaqit-upload-hint {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.mawaqit-message {
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    animation: mawaqit-slideIn 0.3s ease;
+}
+
+.mawaqit-message.show {
+    display: flex;
+}
+
+.mawaqit-message.error {
+    background: rgba(255, 71, 87, 0.15);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    color: #ff6b7a;
+}
+
+.mawaqit-message.success {
+    background: rgba(0, 255, 136, 0.15);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    color: #00ff88;
+}
+
+.mawaqit-message.info {
+    background: rgba(0, 217, 255, 0.15);
+    border: 1px solid rgba(0, 217, 255, 0.3);
+    color: #00d9ff;
+}
+
+.mawaqit-message svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.mawaqit-processing {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    color: #00d9ff;
+    font-size: 0.85rem;
+}
+
+.mawaqit-processing.show {
+    display: flex;
+}
+
+.mawaqit-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(0, 217, 255, 0.3);
+    border-top-color: #00d9ff;
+    border-radius: 50%;
+    animation: mawaqit-spin 0.8s linear infinite;
+}
+
+@keyframes mawaqit-spin {
+    to { transform: rotate(360deg); }
+}
+
+.mawaqit-file-info {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 15px;
+    display: none;
+}
+
+.mawaqit-file-info.show {
+    display: block;
+    animation: mawaqit-slideIn 0.3s ease;
+}
+
+.mawaqit-file-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+}
+
+.mawaqit-file-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #e4e4e4;
+}
+
+.mawaqit-file-name svg {
+    width: 18px;
+    height: 18px;
+    stroke: #00ff88;
+}
+
+.mawaqit-file-size {
+    color: #888;
+    font-size: 0.8rem;
+}
+
+.mawaqit-file-content {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    max-height: 150px;
+    overflow: auto;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: #a0a0a0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.mawaqit-file-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mawaqit-file-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.mawaqit-file-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.mawaqit-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.mawaqit-stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+}
+
+.mawaqit-stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #00d9ff, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.mawaqit-stat-label {
+    font-size: 0.65rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 3px;
+}
+
+.mawaqit-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mawaqit-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mawaqit-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+@media (max-width: 480px) {
+    #mawaqit-importer-panel {
+        right: 10px;
+        left: 10px;
+        width: auto;
+        bottom: 90px;
+    }
+
+    #mawaqit-importer-toggle {
+        right: 15px;
+        bottom: 15px;
+        width: 50px;
+        height: 50px;
+    }
+}

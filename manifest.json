@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Mawaqit Bulk Calendar Importer",
+  "version": "2.1",
+  "description": "Bulk import prayer times from CSV files into Mawaqit calendar",
+  "author": "You",
+  "permissions": [],
+  "host_permissions": [
+    "*://mawaqit.net/*/configure*",
+    "*://*.mawaqit.net/*/configure*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://mawaqit.net/*/configure*",
+        "*://*.mawaqit.net/*/configure*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.svg",
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  }
+}
