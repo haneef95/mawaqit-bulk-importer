@@ -1,418 +1,538 @@
-#mawaqit-importer-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #00d9ff, #00ff88);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(0, 217, 255, 0.4);
-    z-index: 999998;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* Floating Action Button */
+.mawaqit-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d9ff 0%, #00ff88 100%);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0, 217, 255, 0.4);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 999999;
 }
 
-#mawaqit-importer-toggle:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 30px rgba(0, 217, 255, 0.6);
+.mawaqit-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 30px rgba(0, 217, 255, 0.6);
 }
 
-#mawaqit-importer-toggle svg {
-    width: 28px;
-    height: 28px;
-    stroke: #1a1a2e;
-    stroke-width: 2;
-    fill: none;
+.mawaqit-fab svg {
+  width: 24px;
+  height: 24px;
+  color: #1a1a2e;
 }
 
-#mawaqit-importer-panel {
-    position: fixed;
-    bottom: 100px;
-    right: 20px;
-    width: 400px;
-    max-width: calc(100vw - 40px);
-    max-height: calc(100vh - 140px);
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    border-radius: 20px;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 999999;
-    overflow: hidden;
-    display: none;
-    flex-direction: column;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* Modal Overlay */
+.mawaqit-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-#mawaqit-importer-panel.show {
-    display: flex;
-    animation: mawaqit-slideIn 0.3s ease;
+.mawaqit-modal.active {
+  opacity: 1;
+  visibility: visible;
 }
 
-@keyframes mawaqit-slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+/* Modal Content */
+.mawaqit-modal-content {
+  background: #1a1a2e;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
 }
 
-#mawaqit-importer-panel * {
-    box-sizing: border-box;
+.mawaqit-modal.active .mawaqit-modal-content {
+  transform: translateY(0);
 }
 
-.mawaqit-header {
-    padding: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+/* Modal Header */
+.mawaqit-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.mawaqit-header h2 {
-    margin: 0;
-    font-size: 1.1rem;
-    background: linear-gradient(90deg, #00d9ff, #00ff88);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.mawaqit-modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
 }
 
-.mawaqit-close-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s ease;
+.mawaqit-close {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s ease;
 }
 
-.mawaqit-close-btn:hover {
-    background: rgba(255, 71, 87, 0.3);
+.mawaqit-close:hover {
+  color: #fff;
 }
 
-.mawaqit-close-btn svg {
-    width: 18px;
-    height: 18px;
-    stroke: #e4e4e4;
-    stroke-width: 2;
+/* Modal Body */
+.mawaqit-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
 }
 
-.mawaqit-content {
-    padding: 20px;
-    overflow-y: auto;
-    flex: 1;
-    color: #e4e4e4;
-}
-
+/* Sections */
 .mawaqit-section {
-    margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.mawaqit-section-title {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: #00d9ff;
-    margin-bottom: 12px;
-    font-weight: 600;
+.mawaqit-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #888;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
+/* Radio Group */
 .mawaqit-radio-group {
-    display: flex;
-    gap: 10px;
+  display: flex;
+  gap: 16px;
 }
 
-.mawaqit-radio-option {
-    flex: 1;
+.mawaqit-radio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 15px;
 }
 
-.mawaqit-radio-option input[type="radio"] {
-    display: none;
+.mawaqit-radio input {
+  display: none;
 }
 
-.mawaqit-radio-option label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #e4e4e4;
+.mawaqit-radio-custom {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #444;
+  position: relative;
+  transition: border-color 0.2s ease;
 }
 
-.mawaqit-radio-option input[type="radio"]:checked + label {
-    background: rgba(0, 217, 255, 0.15);
-    border-color: #00d9ff;
+.mawaqit-radio input:checked + .mawaqit-radio-custom {
+  border-color: #00d9ff;
 }
 
-.mawaqit-radio-option label:hover {
-    background: rgba(255, 255, 255, 0.08);
+.mawaqit-radio input:checked + .mawaqit-radio-custom::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d9ff 0%, #00ff88 100%);
 }
 
-.mawaqit-file-upload {
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 25px;
-    text-align: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    position: relative;
+/* Dropzone */
+.mawaqit-dropzone {
+  border: 2px dashed #444;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s ease, background 0.3s ease;
 }
 
-.mawaqit-file-upload:hover,
-.mawaqit-file-upload.dragover {
-    border-color: #00d9ff;
-    background: rgba(0, 217, 255, 0.05);
+.mawaqit-dropzone:hover,
+.mawaqit-dropzone.dragover {
+  border-color: #00d9ff;
+  background: rgba(0, 217, 255, 0.05);
 }
 
-.mawaqit-file-upload input[type="file"] {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
+.mawaqit-dropzone.has-file {
+  border-style: solid;
+  border-color: #00ff88;
+  background: rgba(0, 255, 136, 0.05);
 }
 
 .mawaqit-upload-icon {
-    width: 50px;
-    height: 50px;
-    margin: 0 auto 10px;
-    background: linear-gradient(135deg, #00d9ff, #00ff88);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  width: 48px;
+  height: 48px;
+  color: #666;
+  margin-bottom: 16px;
 }
 
-.mawaqit-upload-icon svg {
-    width: 24px;
-    height: 24px;
-    stroke: #1a1a2e;
-    stroke-width: 2;
-    fill: none;
+.mawaqit-dropzone p {
+  color: #fff;
+  font-size: 16px;
+  margin: 0 0 8px 0;
 }
 
-.mawaqit-upload-text {
-    font-size: 0.9rem;
-    margin-bottom: 4px;
-    color: #e4e4e4;
+.mawaqit-dropzone span {
+  color: #666;
+  font-size: 14px;
 }
 
-.mawaqit-upload-hint {
-    font-size: 0.75rem;
-    color: #666;
-}
-
-.mawaqit-message {
-    padding: 12px 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    display: none;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
-    animation: mawaqit-slideIn 0.3s ease;
-}
-
-.mawaqit-message.show {
-    display: flex;
-}
-
-.mawaqit-message.error {
-    background: rgba(255, 71, 87, 0.15);
-    border: 1px solid rgba(255, 71, 87, 0.3);
-    color: #ff6b7a;
-}
-
-.mawaqit-message.success {
-    background: rgba(0, 255, 136, 0.15);
-    border: 1px solid rgba(0, 255, 136, 0.3);
-    color: #00ff88;
-}
-
-.mawaqit-message.info {
-    background: rgba(0, 217, 255, 0.15);
-    border: 1px solid rgba(0, 217, 255, 0.3);
-    color: #00d9ff;
-}
-
-.mawaqit-message svg {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-}
-
-.mawaqit-processing {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 15px;
-    color: #00d9ff;
-    font-size: 0.85rem;
-}
-
-.mawaqit-processing.show {
-    display: flex;
-}
-
-.mawaqit-spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(0, 217, 255, 0.3);
-    border-top-color: #00d9ff;
-    border-radius: 50%;
-    animation: mawaqit-spin 0.8s linear infinite;
-}
-
-@keyframes mawaqit-spin {
-    to { transform: rotate(360deg); }
-}
-
+/* File Info */
 .mawaqit-file-info {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    padding: 15px;
-    display: none;
+  margin-top: 16px;
 }
 
-.mawaqit-file-info.show {
-    display: block;
-    animation: mawaqit-slideIn 0.3s ease;
+.mawaqit-file-selected {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
 }
 
-.mawaqit-file-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    font-size: 0.85rem;
+.mawaqit-file-selected > svg {
+  width: 32px;
+  height: 32px;
+  color: #00d9ff;
+  flex-shrink: 0;
+}
+
+.mawaqit-file-details {
+  flex: 1;
+  min-width: 0;
 }
 
 .mawaqit-file-name {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    color: #e4e4e4;
-}
-
-.mawaqit-file-name svg {
-    width: 18px;
-    height: 18px;
-    stroke: #00ff88;
+  display: block;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mawaqit-file-size {
-    color: #888;
-    font-size: 0.8rem;
+  color: #666;
+  font-size: 12px;
 }
 
-.mawaqit-file-content {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    padding: 12px;
-    max-height: 150px;
-    overflow: auto;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 0.75rem;
-    line-height: 1.5;
-    color: #a0a0a0;
-    white-space: pre-wrap;
-    word-break: break-all;
+.mawaqit-file-remove {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s ease;
 }
 
-.mawaqit-file-content::-webkit-scrollbar {
-    width: 6px;
+.mawaqit-file-remove:hover {
+  color: #ff4757;
 }
 
-.mawaqit-file-content::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
+.mawaqit-file-remove svg {
+  width: 18px;
+  height: 18px;
 }
 
-.mawaqit-file-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
+/* Sample CSV Styles */
+.mawaqit-sample-csv {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.mawaqit-sample-csv h4 {
+  margin: 0 0 12px 0;
+  color: #00d9ff;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mawaqit-csv-description {
+  color: #888;
+  font-size: 13px;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.mawaqit-csv-table-wrapper {
+  overflow-x: auto;
+  margin: 0 -8px;
+  padding: 0 8px;
+}
+
+.mawaqit-csv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.mawaqit-csv-table th,
+.mawaqit-csv-table td {
+  padding: 8px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.mawaqit-csv-table th {
+  background: rgba(0, 217, 255, 0.15);
+  color: #00d9ff;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0, 217, 255, 0.3);
+}
+
+.mawaqit-csv-table td {
+  color: #ccc;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mawaqit-csv-table tr:last-child td {
+  border-bottom: none;
+}
+
+.mawaqit-csv-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Stats */
 .mawaqit-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-top: 12px;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
-.mawaqit-stat-card {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    padding: 10px;
-    text-align: center;
+.mawaqit-stat {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
 }
 
 .mawaqit-stat-value {
-    font-size: 1.2rem;
-    font-weight: 700;
-    background: linear-gradient(90deg, #00d9ff, #00ff88);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
 }
 
 .mawaqit-stat-label {
-    font-size: 0.65rem;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 3px;
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.mawaqit-content::-webkit-scrollbar {
-    width: 6px;
+.mawaqit-stat:nth-child(2) .mawaqit-stat-value {
+  color: #00ff88;
 }
 
-.mawaqit-content::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
+.mawaqit-stat:nth-child(3) .mawaqit-stat-value {
+  color: #ff4757;
 }
 
-.mawaqit-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
+/* Progress Bar */
+.mawaqit-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-@media (max-width: 480px) {
-    #mawaqit-importer-panel {
-        right: 10px;
-        left: 10px;
-        width: auto;
-        bottom: 90px;
-    }
+.mawaqit-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
 
-    #mawaqit-importer-toggle {
-        right: 15px;
-        bottom: 15px;
-        width: 50px;
-        height: 50px;
-    }
+.mawaqit-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d9ff 0%, #00ff88 100%);
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.mawaqit-progress-text {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 45px;
+  text-align: right;
+}
+
+/* Log */
+.mawaqit-log {
+  background: #0d0d1a;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.mawaqit-log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mawaqit-log-header span {
+  color: #888;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mawaqit-log-clear {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.mawaqit-log-clear:hover {
+  color: #fff;
+}
+
+.mawaqit-log-content {
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+.mawaqit-log-entry {
+  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mawaqit-log-entry:last-child {
+  border-bottom: none;
+}
+
+.mawaqit-log-info {
+  color: #888;
+}
+
+.mawaqit-log-success {
+  color: #00ff88;
+}
+
+.mawaqit-log-error {
+  color: #ff4757;
+}
+
+/* Modal Footer */
+.mawaqit-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Buttons */
+.mawaqit-btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.mawaqit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mawaqit-btn-primary {
+  background: linear-gradient(135deg, #00d9ff 0%, #00ff88 100%);
+  color: #1a1a2e;
+}
+
+.mawaqit-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 20px rgba(0, 217, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.mawaqit-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.mawaqit-btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Scrollbar */
+.mawaqit-modal-body::-webkit-scrollbar,
+.mawaqit-log-content::-webkit-scrollbar,
+.mawaqit-csv-table-wrapper::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.mawaqit-modal-body::-webkit-scrollbar-track,
+.mawaqit-log-content::-webkit-scrollbar-track,
+.mawaqit-csv-table-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mawaqit-modal-body::-webkit-scrollbar-thumb,
+.mawaqit-log-content::-webkit-scrollbar-thumb,
+.mawaqit-csv-table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.mawaqit-modal-body::-webkit-scrollbar-thumb:hover,
+.mawaqit-log-content::-webkit-scrollbar-thumb:hover,
+.mawaqit-csv-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
