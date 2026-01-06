@@ -39,7 +39,5 @@ mawaqit-bulk-importer/
 ├── styles.css
 ├── README.md
 └── icons/
-    ├── icon16.svg
-    ├── icon48.svg
-    └── icon128.svg
-
+    ├── icon.svg
+    
