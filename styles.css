@@ -401,6 +401,171 @@
     border-radius: 3px;
 }
 
+/* Advanced Options Section */
+.mawaqit-advanced-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #e4e4e4;
+}
+
+.mawaqit-advanced-toggle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.mawaqit-advanced-toggle svg {
+    width: 16px;
+    height: 16px;
+    stroke: #00d9ff;
+    transition: transform 0.3s ease;
+}
+
+.mawaqit-advanced-toggle.expanded svg {
+    transform: rotate(180deg);
+}
+
+.mawaqit-advanced-content {
+    display: none;
+    padding: 15px;
+    margin-top: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mawaqit-advanced-content.show {
+    display: block;
+    animation: mawaqit-slideIn 0.3s ease;
+}
+
+/* Toggle Switch */
+.mawaqit-advanced-option {
+    margin-bottom: 15px;
+}
+
+.mawaqit-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.mawaqit-toggle-label input {
+    display: none;
+}
+
+.mawaqit-toggle-slider {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: background 0.3s ease;
+    flex-shrink: 0;
+}
+
+.mawaqit-toggle-slider::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.mawaqit-toggle-label input:checked + .mawaqit-toggle-slider {
+    background: linear-gradient(135deg, #00d9ff, #00ff88);
+}
+
+.mawaqit-toggle-label input:checked + .mawaqit-toggle-slider::after {
+    transform: translateX(20px);
+}
+
+.mawaqit-toggle-text {
+    font-size: 0.85rem;
+    color: #e4e4e4;
+}
+
+/* Threshold Inputs */
+.mawaqit-thresholds {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mawaqit-thresholds.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.mawaqit-threshold-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #00d9ff;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.mawaqit-threshold-hint {
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 12px;
+}
+
+.mawaqit-threshold-inputs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.mawaqit-threshold-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.mawaqit-threshold-item label {
+    font-size: 0.75rem;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mawaqit-threshold-item input {
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #e4e4e4;
+    font-size: 0.85rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.mawaqit-threshold-item input:focus {
+    outline: none;
+    border-color: #00d9ff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.mawaqit-threshold-item input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 @media (max-width: 480px) {
     #mawaqit-importer-panel {
         right: 10px;

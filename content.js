@@ -52,6 +52,46 @@
             </div>
 
             <div class="mawaqit-section">
+                <div class="mawaqit-advanced-toggle" id="mawaqit-advanced-toggle">
+                    <span>Advanced Options</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+                <div class="mawaqit-advanced-content" id="mawaqit-advanced-content">
+                    <div class="mawaqit-advanced-option">
+                        <label class="mawaqit-toggle-label">
+                            <input type="checkbox" id="mawaqit-convert-24hr" checked>
+                            <span class="mawaqit-toggle-slider"></span>
+                            <span class="mawaqit-toggle-text">Convert 12hr to 24hr</span>
+                        </label>
+                    </div>
+                    <div class="mawaqit-thresholds" id="mawaqit-thresholds">
+                        <div class="mawaqit-threshold-title">Conversion Thresholds</div>
+                        <div class="mawaqit-threshold-hint">Add 12 hours if time is less than:</div>
+                        <div class="mawaqit-threshold-inputs">
+                            <div class="mawaqit-threshold-item">
+                                <label>Dhuhr</label>
+                                <input type="number" id="mawaqit-threshold-dhuhr" value="5" min="0" max="12">
+                            </div>
+                            <div class="mawaqit-threshold-item">
+                                <label>Asr</label>
+                                <input type="number" id="mawaqit-threshold-asr" value="12" min="0" max="12">
+                            </div>
+                            <div class="mawaqit-threshold-item">
+                                <label>Maghrib</label>
+                                <input type="number" id="mawaqit-threshold-maghrib" value="12" min="0" max="12">
+                            </div>
+                            <div class="mawaqit-threshold-item">
+                                <label>Isha</label>
+                                <input type="number" id="mawaqit-threshold-isha" value="12" min="0" max="12">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mawaqit-section">
                 <div class="mawaqit-section-title">Upload CSV</div>
                 <div class="mawaqit-file-upload" id="mawaqit-dropzone">
                     <input type="file" id="mawaqit-file-input" accept=".csv,.txt">
@@ -144,6 +184,24 @@
         msgIcon.innerHTML = icons[type] || icons.info;
     }
 
+    function getConversionSettings() {
+        const convert24hr = document.getElementById('mawaqit-convert-24hr')?.checked ?? true;
+        
+        if (!convert24hr) {
+            return { disableConversion: true };
+        }
+
+        return {
+            disableConversion: false,
+            thresholds: {
+                dhuhr: parseInt(document.getElementById('mawaqit-threshold-dhuhr')?.value ?? 5, 10),
+                asr: parseInt(document.getElementById('mawaqit-threshold-asr')?.value ?? 12, 10),
+                maghrib: parseInt(document.getElementById('mawaqit-threshold-maghrib')?.value ?? 12, 10),
+                isha: parseInt(document.getElementById('mawaqit-threshold-isha')?.value ?? 12, 10)
+            }
+        };
+    }
+
     function parseMawaqitCSV(csvContent, calendarType) {
         const stats = {
             rowsProcessed: 0,
@@ -151,6 +209,9 @@
             timesConverted: 0,
             errors: []
         };
+
+        const settings = getConversionSettings();
+        const prayerRules = TimeConverter.getPrayerRules(settings.thresholds, settings.disableConversion);
 
         const rows = csvContent
             .trim()
@@ -169,7 +230,7 @@
             const dayOfMonth = parseInt(columns[1], 10);
 
             // Convert times from 12hr to 24hr format based on prayer context
-            const converted = TimeConverter.convertRow(columns, calendarType);
+            const converted = TimeConverter.convertRow(columns, calendarType, prayerRules);
             stats.timesConverted += converted.conversions;
             converted.errors.forEach(err => stats.errors.push(`Row ${rowIndex}: ${err}`));
 
@@ -297,17 +358,39 @@
         dropzone.classList.remove('dragover');
     });
 
-    dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('dragover');
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
 
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            const fileInput = document.getElementById('mawaqit-file-input');
-            fileInput.files = files;
-            handleFileSelection({ target: fileInput });
-        }
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const fileInput = document.getElementById('mawaqit-file-input');
+                fileInput.files = files;
+                handleFileSelection({ target: fileInput });
+            }
+        });
+
+    // Advanced Options Toggle
+    const advancedToggle = document.getElementById('mawaqit-advanced-toggle');
+    const advancedContent = document.getElementById('mawaqit-advanced-content');
+    
+    advancedToggle.addEventListener('click', () => {
+        advancedToggle.classList.toggle('expanded');
+        advancedContent.classList.toggle('show');
     });
+
+    // 24hr Conversion Toggle
+    const convert24hrToggle = document.getElementById('mawaqit-convert-24hr');
+    const thresholdsSection = document.getElementById('mawaqit-thresholds');
+    
+    convert24hrToggle.addEventListener('change', () => {
+        thresholdsSection.classList.toggle('disabled', !convert24hrToggle.checked);
+        const inputs = thresholdsSection.querySelectorAll('input');
+        inputs.forEach(input => input.disabled = !convert24hrToggle.checked);
+    });
+
+    // Initialize thresholds state
+    thresholdsSection.classList.toggle('disabled', !convert24hrToggle.checked);
 
     console.log('✅ Mawaqit Bulk Calendar Importer extension loaded');
 
