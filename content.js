@@ -148,6 +148,7 @@
         const stats = {
             rowsProcessed: 0,
             fieldsUpdated: 0,
+            timesConverted: 0,
             errors: []
         };
 
@@ -167,10 +168,15 @@
             const monthIndex = parseInt(columns[0], 10) - 1;
             const dayOfMonth = parseInt(columns[1], 10);
 
-            for (let colIndex = 2; colIndex < columns.length; colIndex++) {
+            // Convert times from 12hr to 24hr format based on prayer context
+            const converted = TimeConverter.convertRow(columns, calendarType);
+            stats.timesConverted += converted.conversions;
+            converted.errors.forEach(err => stats.errors.push(`Row ${rowIndex}: ${err}`));
+
+            for (let colIndex = 2; colIndex < converted.columns.length; colIndex++) {
                 const cellIndex = colIndex - 1;
                 const fieldName = `configuration[${calendarType}][${monthIndex}][${dayOfMonth}][${cellIndex}]`;
-                const timeValue = columns[colIndex]?.trim();
+                const timeValue = converted.columns[colIndex]?.trim();
 
                 try {
                     const inputElement = document.getElementsByName(fieldName)[0];
@@ -200,6 +206,10 @@
             <div class="mawaqit-stat-card">
                 <div class="mawaqit-stat-value">${stats.fieldsUpdated}</div>
                 <div class="mawaqit-stat-label">Fields</div>
+            </div>
+            <div class="mawaqit-stat-card">
+                <div class="mawaqit-stat-value">${stats.timesConverted || 0}</div>
+                <div class="mawaqit-stat-label">Converted</div>
             </div>
             <div class="mawaqit-stat-card">
                 <div class="mawaqit-stat-value">${stats.errors.length}</div>

@@ -15,7 +15,7 @@
         "*://mawaqit.net/*/configure*",
         "*://*.mawaqit.net/*/configure*"
       ],
-      "js": ["content.js"],
+      "js": ["timeConverter.js", "content.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"
     }
