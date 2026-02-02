@@ -68,7 +68,7 @@
                     </div>
                     <div class="mawaqit-thresholds" id="mawaqit-thresholds">
                         <div class="mawaqit-threshold-title">Conversion Thresholds</div>
-                        <div class="mawaqit-threshold-hint">Add 12 hours if time is less than:</div>
+                        <div class="mawaqit-threshold-hint">Fajr and Shuruq will remain unchanged. Add 12 hours if hour is less than:</div>
                         <div class="mawaqit-threshold-inputs">
                             <div class="mawaqit-threshold-item">
                                 <label>Dhuhr</label>
