@@ -573,6 +573,102 @@
     cursor: not-allowed;
 }
 
+/* DST Conversion Section */
+.mawaqit-dst-option {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mawaqit-dst-info {
+    display: none;
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(0, 217, 255, 0.05);
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    border-radius: 8px;
+}
+
+.mawaqit-dst-info.show {
+    display: block;
+    animation: mawaqit-slideIn 0.3s ease;
+}
+
+.mawaqit-dst-header {
+    margin-bottom: 12px;
+}
+
+.mawaqit-dst-timezone {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mawaqit-dst-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+    font-weight: 500;
+}
+
+.mawaqit-dst-value {
+    font-size: 0.85rem;
+    color: #00d9ff;
+    font-weight: 600;
+}
+
+.mawaqit-dst-period {
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mawaqit-dst-period > .mawaqit-dst-label {
+    margin-bottom: 8px;
+    display: block;
+}
+
+.mawaqit-dst-dates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.mawaqit-dst-date-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px;
+    border-radius: 6px;
+}
+
+.mawaqit-dst-date-label {
+    font-size: 0.7rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mawaqit-dst-date-value {
+    font-size: 0.8rem;
+    color: #e4e4e4;
+    font-weight: 500;
+}
+
+.mawaqit-dst-offset {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mawaqit-dst-offset .mawaqit-dst-value {
+    color: #00ff88;
+}
+
 @media (max-width: 480px) {
     #mawaqit-importer-panel {
         left: 10px;

@@ -1,54 +1,150 @@
-# Mawaqit Bulk Calendar Importer
+# 📅 Mawaqit Bulk Calendar Importer
 
 A Chrome extension to bulk import prayer times from CSV files into the Mawaqit calendar configuration page.
 
-## Features
+## ✨ Features
 
-- 📅 Import Athan or Iqama times for any or all days in the year in a single CSV for each type.
-- 📁 Drag & drop CSV upload
-- 📊 Real-time import statistics
-- 🎨 Modern dark UI that matches Mawaqit
-- ✅ This only loads the CSV onto the configure page, allowing you to review and submit.
+- 📅 **Bulk Import** - Import Athan or Iqama times for any or all days in the year in a single CSV
+- 📁 **Drag & Drop** - Easy CSV upload with drag and drop support
+- 🔄 **12hr to 24hr Conversion** - Automatically converts 12-hour format times to 24-hour format
+- 🌐 **DST to Standard Time Conversion** - Convert Daylight Saving Time to Standard Time automatically
+- 📊 **Real-time Statistics** - View import progress and conversion stats
+- 🎨 **Modern Dark UI** - Sleek interface that matches Mawaqit's design
+- ✅ **Safe Preview** - Only loads data onto the page for review before submitting
 
-## Installation
+---
+
+## 🚀 Installation
 
 1. Download or clone this repository
 2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" (top right)
-4. Click "Load unpacked"
+3. Enable **"Developer mode"** (top right)
+4. Click **"Load unpacked"**
 5. Select the extension folder
 
-## Usage
+---
+
+## 📖 Usage
 
 1. Navigate to your Mawaqit mosque configuration page
-2. Click the calendar button in the bottom right
-3. Select calendar type (Athan or Iqama)
-4. Upload your CSV file
+2. Click the calendar button in the bottom left corner
+3. Select calendar type (**Athan** or **Iqama**)
+4. *(Optional)* Configure Advanced Options
+5. Upload your CSV file
 
-## CSV Format
+---
 
-### Adhan
+## ⚙️ Advanced Options
+
+### 🔢 12-Hour to 24-Hour Conversion
+
+Automatically converts times from 12-hour format (e.g., `1:30` for 1:30 PM) to 24-hour format (e.g., `13:30`).
+
+| Prayer   | Default Threshold | Behaviour                          |
+|----------|------------------|------------------------------------|
+| Fajr     | -                | Always AM (no conversion)          |
+| Shuruq   | -                | Always AM (no conversion)          |
+| Dhuhr    | 5                | Add 12 hours if hour < 5           |
+| Asr      | 12               | Add 12 hours if hour < 12          |
+| Maghrib  | 12               | Add 12 hours if hour < 12          |
+| Isha     | 12               | Add 12 hours if hour < 12          |
+
+You can customise these thresholds in the Advanced Options panel.
+
+---
+
+### 🌐 DST to Standard Time Conversion
+
+**New Feature!** Automatically detects and converts Daylight Saving Time to Standard Time.
+
+#### How it works:
+
+1. **Enable the option** - Toggle "Convert from DST to Standard Time" in Advanced Options
+2. **Timezone Detection** - Reads the timezone from your Mawaqit configuration (e.g., `Europe/London`)
+3. **DST Period Display** - Shows the DST start/end dates and offset for your timezone
+4. **Automatic Conversion** - For dates within the DST period, subtracts the DST offset from all times
+
+#### Example:
+
+For `Europe/London` timezone:
+- **DST Period**: Last Sunday of March to Last Sunday of October
+- **DST Offset**: +1 hour
+
+If your CSV has `14:30` for a date in July (during DST), it will be converted to `13:30` (Standard Time).
+
+#### Why use this?
+
+Some prayer time calculation sources provide times in DST format during summer months. Mawaqit expects all times in Standard Time, so this feature automatically handles the conversion for you.
+
+---
+
+## 📄 CSV Format
+
+### Athan Calendar
+
 ```csv
 Month,Day,Fajr,Shuruq,Dhuhr,Asr,Maghrib,Isha
 1,1,06:30,08:00,12:30,15:00,17:30,19:00
 1,2,06:29,07:59,12:30,15:01,17:31,19:01
 ```
 
+### Iqama Calendar
 
-### Iqama
 ```csv
 Month,Day,Fajr,Dhuhr,Asr,Maghrib,Isha
-1,1,06:30,12:30,15:00,17:30,19:00
-1,2,06:29,12:30,15:01,17:31,19:01
+1,1,06:45,13:00,15:30,17:35,19:15
+1,2,06:44,13:00,15:31,17:36,19:16
 ```
 
-## Folder structure
-```Simple folder tree
-mawaqit-bulk-importer/
-├── manifest.json
-├── content.js
-├── styles.css
-├── README.md
-└── icons/
-    ├── icon.svg
+> **Note:** Iqama calendar does not include Shuruq column.
+
+---
+
+## 📁 Folder Structure
+
 ```
+mawaqit-bulk-importer/
+├── 📄 manifest.json      # Extension configuration
+├── 📄 content.js         # Main UI and logic
+├── 📄 timeConverter.js   # 12hr to 24hr conversion utility
+├── 📄 dstConverter.js    # DST detection and conversion utility
+├── 📄 styles.css         # UI styles
+├── 📄 README.md          # Documentation
+├── 📁 icons/
+│   └── 🖼️ icon.svg       # Extension icon
+└── 📁 examples/
+    └── 📄 *.csv          # Sample CSV files
+```
+
+---
+
+## 🛠️ Technical Details
+
+### DST Detection Algorithm
+
+The extension uses the browser's `Intl` API to detect DST transitions:
+
+1. Compares timezone offsets between January and July
+2. Identifies if DST is observed (different offsets indicate DST)
+3. Scans each day of the year to find exact transition dates
+4. Calculates the DST offset (typically 60 minutes)
+
+### Supported Timezones
+
+Any IANA timezone that the browser supports, including:
+- `Europe/London`
+- `America/New_York`
+- `Australia/Sydney`
+- And many more...
+
+---
+
+## 📝 License
+
+MIT License - Feel free to use and modify as needed.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
