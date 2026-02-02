@@ -66,6 +66,94 @@
                             <span class="mawaqit-toggle-text">Convert 12hr to 24hr</span>
                         </label>
                     </div>
+                    <div class="mawaqit-advanced-option">
+                        <label class="mawaqit-toggle-label">
+                            <input type="checkbox" id="mawaqit-convert-dst">
+                            <span class="mawaqit-toggle-slider"></span>
+                            <span class="mawaqit-toggle-text">Convert DST to Winter Time</span>
+                        </label>
+                        <div class="mawaqit-hint">Required by Mawaqit: Times must be in standard time (winter time) throughout the year. Enable this if your CSV contains local times with DST applied.</div>
+                    </div>
+                    <div class="mawaqit-timezone-section" id="mawaqit-timezone-section" style="display: none; margin-top: 12px;">
+                        <label for="mawaqit-timezone">Timezone</label>
+                        <select id="mawaqit-timezone" class="mawaqit-select">
+                            <option value="auto">Auto-detect from browser</option>
+                            <option value="Europe/London">Europe/London</option>
+                            <option value="Europe/Paris">Europe/Paris</option>
+                            <option value="Europe/Berlin">Europe/Berlin</option>
+                            <option value="Europe/Rome">Europe/Rome</option>
+                            <option value="Europe/Madrid">Europe/Madrid</option>
+                            <option value="Europe/Amsterdam">Europe/Amsterdam</option>
+                            <option value="Europe/Brussels">Europe/Brussels</option>
+                            <option value="Europe/Zurich">Europe/Zurich</option>
+                            <option value="Europe/Vienna">Europe/Vienna</option>
+                            <option value="Europe/Stockholm">Europe/Stockholm</option>
+                            <option value="Europe/Oslo">Europe/Oslo</option>
+                            <option value="Europe/Copenhagen">Europe/Copenhagen</option>
+                            <option value="Europe/Helsinki">Europe/Helsinki</option>
+                            <option value="Europe/Dublin">Europe/Dublin</option>
+                            <option value="Europe/Lisbon">Europe/Lisbon</option>
+                            <option value="Europe/Prague">Europe/Prague</option>
+                            <option value="Europe/Warsaw">Europe/Warsaw</option>
+                            <option value="Europe/Budapest">Europe/Budapest</option>
+                            <option value="Europe/Athens">Europe/Athens</option>
+                            <option value="Europe/Istanbul">Europe/Istanbul</option>
+                            <option value="Europe/Moscow">Europe/Moscow</option>
+                            <option value="Europe/Kiev">Europe/Kiev</option>
+                            <option value="America/New_York">America/New_York</option>
+                            <option value="America/Chicago">America/Chicago</option>
+                            <option value="America/Denver">America/Denver</option>
+                            <option value="America/Los_Angeles">America/Los_Angeles</option>
+                            <option value="America/Toronto">America/Toronto</option>
+                            <option value="America/Vancouver">America/Vancouver</option>
+                            <option value="America/Mexico_City">America/Mexico_City</option>
+                            <option value="America/Sao_Paulo">America/Sao_Paulo</option>
+                            <option value="America/Buenos_Aires">America/Buenos_Aires</option>
+                            <option value="America/Santiago">America/Santiago</option>
+                            <option value="Asia/Dubai">Asia/Dubai</option>
+                            <option value="Asia/Riyadh">Asia/Riyadh</option>
+                            <option value="Asia/Jeddah">Asia/Jeddah</option>
+                            <option value="Asia/Kuwait">Asia/Kuwait</option>
+                            <option value="Asia/Qatar">Asia/Qatar</option>
+                            <option value="Asia/Bahrain">Asia/Bahrain</option>
+                            <option value="Asia/Muscat">Asia/Muscat</option>
+                            <option value="Asia/Amman">Asia/Amman</option>
+                            <option value="Asia/Beirut">Asia/Beirut</option>
+                            <option value="Asia/Damascus">Asia/Damascus</option>
+                            <option value="Asia/Jerusalem">Asia/Jerusalem</option>
+                            <option value="Asia/Gaza">Asia/Gaza</option>
+                            <option value="Asia/Tehran">Asia/Tehran</option>
+                            <option value="Asia/Karachi">Asia/Karachi</option>
+                            <option value="Asia/India">Asia/Kolkata</option>
+                            <option value="Asia/Dhaka">Asia/Dhaka</option>
+                            <option value="Asia/Jakarta">Asia/Jakarta</option>
+                            <option value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur</option>
+                            <option value="Asia/Singapore">Asia/Singapore</option>
+                            <option value="Asia/Bangkok">Asia/Bangkok</option>
+                            <option value="Asia/Hong_Kong">Asia/Hong_Kong</option>
+                            <option value="Asia/Shanghai">Asia/Shanghai</option>
+                            <option value="Asia/Tokyo">Asia/Tokyo</option>
+                            <option value="Asia/Seoul">Asia/Seoul</option>
+                            <option value="Asia/Manila">Asia/Manila</option>
+                            <option value="Australia/Sydney">Australia/Sydney</option>
+                            <option value="Australia/Melbourne">Australia/Melbourne</option>
+                            <option value="Australia/Brisbane">Australia/Brisbane</option>
+                            <option value="Australia/Perth">Australia/Perth</option>
+                            <option value="Australia/Adelaide">Australia/Adelaide</option>
+                            <option value="Pacific/Auckland">Pacific/Auckland</option>
+                            <option value="Pacific/Fiji">Pacific/Fiji</option>
+                            <option value="Africa/Cairo">Africa/Cairo</option>
+                            <option value="Africa/Casablanca">Africa/Casablanca</option>
+                            <option value="Africa/Tunis">Africa/Tunis</option>
+                            <option value="Africa/Algiers">Africa/Algiers</option>
+                            <option value="Africa/Tripoli">Africa/Tripoli</option>
+                            <option value="Africa/Khartoum">Africa/Khartoum</option>
+                            <option value="Africa/Lagos">Africa/Lagos</option>
+                            <option value="Africa/Johannesburg">Africa/Johannesburg</option>
+                            <option value="Africa/Nairobi">Africa/Nairobi</option>
+                        </select>
+                        <div class="mawaqit-hint">Select the timezone of your mosque. The system will detect DST periods and subtract 1 hour from times during those periods.</div>
+                    </div>
                     <div class="mawaqit-thresholds" id="mawaqit-thresholds">
                         <div class="mawaqit-threshold-title">Conversion Thresholds</div>
                         <div class="mawaqit-threshold-hint">Fajr and Shuruq will remain unchanged. Add 12 hours if hour is less than:</div>
@@ -186,13 +274,18 @@
 
     function getConversionSettings() {
         const convert24hr = document.getElementById('mawaqit-convert-24hr')?.checked ?? true;
+        const convertDst = document.getElementById('mawaqit-convert-dst')?.checked ?? false;
+        const timezoneSelect = document.getElementById('mawaqit-timezone');
+        const timezone = convertDst && timezoneSelect ? timezoneSelect.value : null;
         
-        if (!convert24hr) {
-            return { disableConversion: true };
+        if (!convert24hr && !convertDst) {
+            return { disableConversion: true, disableDstConversion: true };
         }
 
         return {
-            disableConversion: false,
+            disableConversion: !convert24hr,
+            disableDstConversion: !convertDst,
+            timezone: timezone,
             thresholds: {
                 dhuhr: parseInt(document.getElementById('mawaqit-threshold-dhuhr')?.value ?? 5, 10),
                 asr: parseInt(document.getElementById('mawaqit-threshold-asr')?.value ?? 12, 10),
@@ -207,6 +300,7 @@
             rowsProcessed: 0,
             fieldsUpdated: 0,
             timesConverted: 0,
+            dstAdjustments: 0,
             errors: []
         };
 
@@ -229,8 +323,17 @@
             const monthIndex = parseInt(columns[0], 10) - 1;
             const dayOfMonth = parseInt(columns[1], 10);
 
-            // Convert times from 12hr to 24hr format based on prayer context
-            const converted = TimeConverter.convertRow(columns, calendarType, prayerRules);
+            let processedColumns = [...columns];
+
+            // Step 1: Convert DST to Standard Time (Winter Time) if enabled
+            if (!settings.disableDstConversion && settings.timezone) {
+                const dstResult = TimeConverter.convertDstToStandard(processedColumns, calendarType, settings.timezone);
+                processedColumns = dstResult.columns;
+                stats.dstAdjustments += dstResult.dstAdjustments;
+            }
+
+            // Step 2: Convert times from 12hr to 24hr format based on prayer context
+            const converted = TimeConverter.convertRow(processedColumns, calendarType, prayerRules);
             stats.timesConverted += converted.conversions;
             converted.errors.forEach(err => stats.errors.push(`Row ${rowIndex}: ${err}`));
 
@@ -259,6 +362,7 @@
         document.getElementById('mawaqit-filename').textContent = file.name;
         document.getElementById('mawaqit-filesize').textContent = formatFileSize(file.size);
         document.getElementById('mawaqit-filecontent').textContent = content;
+        const showDstStats = stats.dstAdjustments > 0;
         document.getElementById('mawaqit-stats').innerHTML = `
             <div class="mawaqit-stat-card">
                 <div class="mawaqit-stat-value">${stats.rowsProcessed}</div>
@@ -270,8 +374,14 @@
             </div>
             <div class="mawaqit-stat-card">
                 <div class="mawaqit-stat-value">${stats.timesConverted || 0}</div>
-                <div class="mawaqit-stat-label">Converted</div>
+                <div class="mawaqit-stat-label">12hr→24hr</div>
             </div>
+            ${showDstStats ? `
+            <div class="mawaqit-stat-card">
+                <div class="mawaqit-stat-value">${stats.dstAdjustments}</div>
+                <div class="mawaqit-stat-label">DST Adjusted</div>
+            </div>
+            ` : ''}
             <div class="mawaqit-stat-card">
                 <div class="mawaqit-stat-value">${stats.errors.length}</div>
                 <div class="mawaqit-stat-label">Errors</div>
@@ -391,6 +501,42 @@
 
     // Initialize thresholds state
     thresholdsSection.classList.toggle('disabled', !convert24hrToggle.checked);
+
+    // DST Conversion Toggle
+    const convertDstToggle = document.getElementById('mawaqit-convert-dst');
+    const timezoneSection = document.getElementById('mawaqit-timezone-section');
+    const timezoneSelect = document.getElementById('mawaqit-timezone');
+    
+    // Auto-detect browser timezone for default selection
+    try {
+        const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (browserTimezone) {
+            // Check if the timezone exists in our options
+            const options = timezoneSelect.querySelectorAll('option');
+            let found = false;
+            options.forEach(option => {
+                if (option.value === browserTimezone) {
+                    option.selected = true;
+                    found = true;
+                }
+            });
+            // If exact match not found, try to find a partial match (e.g., "America/New_York" vs "America/Chicago")
+            if (!found && browserTimezone.includes('/')) {
+                const region = browserTimezone.split('/')[0];
+                options.forEach(option => {
+                    if (option.value.startsWith(region + '/')) {
+                        option.selected = true;
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.log('Could not detect browser timezone');
+    }
+    
+    convertDstToggle.addEventListener('change', () => {
+        timezoneSection.style.display = convertDstToggle.checked ? 'block' : 'none';
+    });
 
     console.log('✅ Mawaqit Bulk Calendar Importer extension loaded');
 

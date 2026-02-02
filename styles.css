@@ -361,7 +361,7 @@
 
 .mawaqit-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     margin-top: 12px;
 }
@@ -601,6 +601,17 @@
     .mawaqit-stats {
         grid-template-columns: repeat(2, 1fr);
     }
+    
+    .mawaqit-timezone-section {
+        padding: 10px;
+    }
+    
+    .mawaqit-select {
+        font-size: 0.8rem;
+        padding: 8px 10px;
+        padding-right: 32px;
+        background-position: right 8px center;
+    }
 
     .mawaqit-file-content {
         max-height: 100px;
@@ -614,4 +625,72 @@
     .mawaqit-section-title {
         font-size: 0.7rem;
     }
+}
+
+/* Timezone Section */
+.mawaqit-timezone-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.mawaqit-timezone-section label {
+    font-size: 0.75rem;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mawaqit-select {
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #e4e4e4;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300d9ff' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+.mawaqit-select:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.mawaqit-select:focus {
+    outline: none;
+    border-color: #00d9ff;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.mawaqit-select option {
+    background: #1a1a2e;
+    color: #e4e4e4;
+    padding: 8px;
+}
+
+/* Hint text */
+.mawaqit-hint {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+/* DST adjustment stat card highlight */
+.mawaqit-stat-card:has(.mawaqit-stat-label:contains("DST Adjusted")) .mawaqit-stat-value {
+    background: linear-gradient(90deg, #ff9f43, #ff6b35);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
