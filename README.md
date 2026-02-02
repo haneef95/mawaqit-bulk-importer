@@ -55,22 +55,37 @@ You can customise these thresholds in the Advanced Options panel.
 
 ### 🌐 DST to Standard Time Conversion
 
-**New Feature!** Automatically detects and converts Daylight Saving Time to Standard Time.
+Automatically detects and converts Daylight Saving Time to Standard Time.
 
 #### How it works:
 
 1. **Enable the option** - Toggle "Convert from DST to Standard Time" in Advanced Options
-2. **Timezone Detection** - Reads the timezone from your Mawaqit configuration (e.g., `Europe/London`)
-3. **DST Period Display** - Shows the DST start/end dates and offset for your timezone
-4. **Automatic Conversion** - For dates within the DST period, subtracts the DST offset from all times
+2. **Set the Year** - Enter the timetable year (defaults to current year) to get accurate DST dates
+3. **Timezone Detection** - Reads the timezone from your Mawaqit configuration (e.g., `Europe/London`)
+4. **DST Period Display** - Shows the exact DST start/end dates with times and offset for your timezone
+5. **Automatic Conversion** - For dates and times within the DST period, subtracts the DST offset
 
 #### Example:
 
-For `Europe/London` timezone:
-- **DST Period**: Last Sunday of March to Last Sunday of October
+For `Europe/London` timezone in 2026:
+- **DST Start**: Sun, 29 Mar 2026 at 01:00
+- **DST End**: Sun, 25 Oct 2026 at 02:00
 - **DST Offset**: +1 hour
 
 If your CSV has `14:30` for a date in July (during DST), it will be converted to `13:30` (Standard Time).
+
+#### Boundary Day Handling:
+
+On DST transition days, the conversion checks both the date AND time:
+- **DST Start Day** (e.g., 29 Mar): Only times AFTER the transition hour are converted
+- **DST End Day** (e.g., 25 Oct): Only times BEFORE the transition hour are converted
+
+#### Supported DST Offsets:
+
+The extension handles any DST offset, not just 1 hour:
+- **60 minutes** - Most common (UK, EU, US)
+- **30 minutes** - Lord Howe Island, Australia
+- **Other offsets** - Automatically detected
 
 #### Why use this?
 

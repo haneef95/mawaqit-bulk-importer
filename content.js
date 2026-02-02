@@ -96,6 +96,10 @@
                         </label>
                     </div>
                     <div class="mawaqit-dst-info" id="mawaqit-dst-info">
+                        <div class="mawaqit-dst-year-input">
+                            <label for="mawaqit-dst-year">Timetable Year:</label>
+                            <input type="number" id="mawaqit-dst-year" value="${new Date().getFullYear()}" min="2000" max="2100">
+                        </div>
                         <div class="mawaqit-dst-header">
                             <div class="mawaqit-dst-timezone" id="mawaqit-dst-timezone">
                                 <span class="mawaqit-dst-label">Timezone:</span>
@@ -271,17 +275,17 @@
             stats.timesConverted += converted.conversions;
             converted.errors.forEach(err => stats.errors.push(`Row ${rowIndex}: ${err}`));
 
-            // Check if this date is in DST period and needs conversion
-            const needsDSTConversion = dstSettings.enabled && 
-                DSTConverter.isInDSTPeriod(month, dayOfMonth, dstSettings.dstInfo, dstSettings.year);
-
             for (let colIndex = 2; colIndex < converted.columns.length; colIndex++) {
                 const cellIndex = colIndex - 1;
                 const fieldName = `configuration[${calendarType}][${monthIndex}][${dayOfMonth}][${cellIndex}]`;
                 let timeValue = converted.columns[colIndex]?.trim();
 
+                // Check if this specific time is in DST period (including hour check for boundary days)
+                const needsDSTConversion = dstSettings.enabled && timeValue &&
+                    DSTConverter.isInDSTPeriod(month, dayOfMonth, timeValue, dstSettings.dstInfo, dstSettings.year);
+
                 // Apply DST to Standard conversion if needed
-                if (needsDSTConversion && timeValue) {
+                if (needsDSTConversion) {
                     const originalTime = timeValue;
                     timeValue = DSTConverter.convertDSTToStandard(timeValue, dstSettings.dstInfo.offset);
                     if (timeValue !== originalTime) {
@@ -453,11 +457,20 @@
     // DST Conversion Toggle
     const convertDSTToggle = document.getElementById('mawaqit-convert-dst');
     const dstInfoSection = document.getElementById('mawaqit-dst-info');
+    const dstYearInput = document.getElementById('mawaqit-dst-year');
     let currentDSTInfo = null;
+    let currentDSTYear = new Date().getFullYear();
 
     convertDSTToggle.addEventListener('change', () => {
         dstInfoSection.classList.toggle('show', convertDSTToggle.checked);
         
+        if (convertDSTToggle.checked) {
+            updateDSTInfo();
+        }
+    });
+
+    // Update DST info when year changes
+    dstYearInput.addEventListener('change', () => {
         if (convertDSTToggle.checked) {
             updateDSTInfo();
         }
@@ -481,9 +494,9 @@
 
         tzValueEl.textContent = timezone;
         
-        // Get DST info for the current year
-        const year = new Date().getFullYear();
-        currentDSTInfo = DSTConverter.findDSTTransitions(timezone, year);
+        // Get DST info for the selected year
+        currentDSTYear = parseInt(dstYearInput.value, 10) || new Date().getFullYear();
+        currentDSTInfo = DSTConverter.findDSTTransitions(timezone, currentDSTYear);
 
         if (currentDSTInfo.hasDST) {
             dstStartEl.textContent = DSTConverter.formatDate(currentDSTInfo.start);
@@ -507,7 +520,7 @@
         return {
             enabled: true,
             dstInfo: currentDSTInfo,
-            year: new Date().getFullYear()
+            year: currentDSTYear
         };
     }
 

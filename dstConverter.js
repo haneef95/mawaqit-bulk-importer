@@ -17,24 +17,67 @@ const DSTConverter = {
     },
 
     /**
+     * Get timezone offset using Intl.DateTimeFormat for more accurate results
+     * @param {Date} date - Date to check
+     * @param {string} timezone - IANA timezone string
+     * @returns {number} Offset in minutes from UTC (positive = behind UTC)
+     */
+    getTimezoneOffset(date, timezone) {
+        try {
+            // Create a formatter that gives us the timezone offset
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: timezone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            
+            // Get parts in the target timezone
+            const parts = formatter.formatToParts(date);
+            const getPart = (type) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
+            
+            const tzYear = getPart('year');
+            const tzMonth = getPart('month') - 1;
+            const tzDay = getPart('day');
+            const tzHour = getPart('hour') === 24 ? 0 : getPart('hour');
+            const tzMinute = getPart('minute');
+            const tzSecond = getPart('second');
+            
+            // Create a date representing what the local time would be
+            const tzDate = new Date(Date.UTC(tzYear, tzMonth, tzDay, tzHour, tzMinute, tzSecond));
+            
+            // The offset is the difference between UTC time and local time
+            return (date.getTime() - tzDate.getTime()) / 60000;
+        } catch (error) {
+            console.error('Error getting timezone offset:', error);
+            return 0;
+        }
+    },
+
+    /**
      * Find DST transitions for a given year and timezone
      * @param {string} timezone - IANA timezone string (e.g., "Europe/London")
      * @param {number} year - Year to check for DST transitions
-     * @returns {{start: Date|null, end: Date|null, offset: number}} DST period info
+     * @returns {{start: Date|null, end: Date|null, offset: number, startHour: number, endHour: number}} DST period info
      */
     findDSTTransitions(timezone, year) {
         const result = {
             start: null,
             end: null,
             offset: 0, // DST offset in minutes
+            startHour: 0, // Hour when DST starts (local time)
+            endHour: 0, // Hour when DST ends (local time)
             hasDST: false
         };
 
         try {
-            // Check each day of the year for offset changes
-            const offsets = [];
-            const jan1 = new Date(year, 0, 1);
-            const jul1 = new Date(year, 6, 1);
+            // Check January and July for offset differences
+            const jan1 = new Date(Date.UTC(year, 0, 1, 12, 0, 0));
+            const jul1 = new Date(Date.UTC(year, 6, 1, 12, 0, 0));
             
             const janOffset = this.getTimezoneOffset(jan1, timezone);
             const julOffset = this.getTimezoneOffset(jul1, timezone);
@@ -47,42 +90,40 @@ const DSTConverter = {
             result.hasDST = true;
             
             // Determine which is standard and which is DST
-            // In Northern Hemisphere, summer (July) typically has DST (smaller offset)
-            // In Southern Hemisphere, it's reversed
+            // Standard time has a MORE POSITIVE offset (further behind UTC)
+            // DST has a LESS POSITIVE offset (closer to UTC / clocks forward)
             const standardOffset = Math.max(janOffset, julOffset);
             const dstOffset = Math.min(janOffset, julOffset);
             result.offset = standardOffset - dstOffset; // DST offset in minutes
 
-            // Find the exact transition dates
+            // Find the exact transition dates using binary search for efficiency
             let prevOffset = janOffset;
-            let dstStart = null;
-            let dstEnd = null;
-
+            
             // Check each day to find transitions
             for (let month = 0; month < 12; month++) {
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
                 for (let day = 1; day <= daysInMonth; day++) {
-                    const date = new Date(year, month, day);
-                    const currentOffset = this.getTimezoneOffset(date, timezone);
+                    // Check at noon UTC to get a stable reading for the day
+                    const dateNoon = new Date(Date.UTC(year, month, day, 12, 0, 0));
+                    const currentOffset = this.getTimezoneOffset(dateNoon, timezone);
                     
                     if (currentOffset !== prevOffset) {
-                        // Found a transition - find the exact time
-                        const transitionDate = this.findExactTransition(year, month, day, timezone, prevOffset);
+                        // Found a transition on this day - find the exact hour
+                        const transitionInfo = this.findExactTransitionHour(year, month, day, timezone, prevOffset, currentOffset);
                         
                         if (currentOffset === dstOffset) {
                             // Transitioning TO DST (clocks spring forward)
-                            dstStart = transitionDate;
+                            result.start = transitionInfo.date;
+                            result.startHour = transitionInfo.hour;
                         } else {
                             // Transitioning FROM DST (clocks fall back)
-                            dstEnd = transitionDate;
+                            result.end = transitionInfo.date;
+                            result.endHour = transitionInfo.hour;
                         }
                         prevOffset = currentOffset;
                     }
                 }
             }
-
-            result.start = dstStart;
-            result.end = dstEnd;
 
         } catch (error) {
             console.error('Error detecting DST transitions:', error);
@@ -97,62 +138,83 @@ const DSTConverter = {
      * @param {number} month - Month (0-11)
      * @param {number} day - Day of transition
      * @param {string} timezone - IANA timezone
-     * @param {number} prevOffset - Previous day's offset
-     * @returns {Date} Exact transition datetime
+     * @param {number} prevOffset - Previous offset
+     * @param {number} newOffset - New offset after transition
+     * @returns {{date: Date, hour: number}} Exact transition datetime and local hour
      */
-    findExactTransition(year, month, day, timezone, prevOffset) {
-        // Check each hour of the day
-        for (let hour = 0; hour < 24; hour++) {
-            const date = new Date(year, month, day, hour);
-            const currentOffset = this.getTimezoneOffset(date, timezone);
-            if (currentOffset !== prevOffset) {
-                return date;
+    findExactTransitionHour(year, month, day, timezone, prevOffset, newOffset) {
+        // Check the previous day's late hours and this day's early hours
+        // DST transitions typically happen in early morning (1am-3am)
+        
+        // Start checking from the previous day at 20:00
+        const prevDay = day - 1;
+        const prevMonth = prevDay < 1 ? month - 1 : month;
+        const actualPrevDay = prevDay < 1 ? new Date(year, month, 0).getDate() : prevDay;
+        const actualYear = prevMonth < 0 ? year - 1 : year;
+        const actualPrevMonth = prevMonth < 0 ? 11 : prevMonth;
+        
+        // Check hours around the transition
+        for (let checkDay = 0; checkDay <= 1; checkDay++) {
+            const d = checkDay === 0 ? actualPrevDay : day;
+            const m = checkDay === 0 ? actualPrevMonth : month;
+            const y = checkDay === 0 ? actualYear : year;
+            
+            for (let hour = (checkDay === 0 ? 20 : 0); hour < (checkDay === 0 ? 24 : 12); hour++) {
+                const testDate = new Date(Date.UTC(y, m, d, hour, 0, 0));
+                const offset = this.getTimezoneOffset(testDate, timezone);
+                
+                if (offset === newOffset) {
+                    // Found the transition hour - return the actual local time
+                    // The transition happens AT this hour in local time
+                    return {
+                        date: new Date(y, m, d, hour, 0, 0),
+                        hour: hour
+                    };
+                }
             }
         }
-        return new Date(year, month, day);
+        
+        // Fallback - return the day at midnight
+        return {
+            date: new Date(year, month, day, 0, 0, 0),
+            hour: 0
+        };
     },
 
     /**
-     * Get timezone offset in minutes for a given date and timezone
-     * @param {Date} date - Date to check
-     * @param {string} timezone - IANA timezone string
-     * @returns {number} Offset in minutes from UTC
-     */
-    getTimezoneOffset(date, timezone) {
-        try {
-            const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
-            const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
-            return (utcDate - tzDate) / 60000; // Convert ms to minutes
-        } catch (error) {
-            console.error('Error getting timezone offset:', error);
-            return 0;
-        }
-    },
-
-    /**
-     * Check if a given date is within the DST period
+     * Check if a given date/time is within the DST period
      * @param {number} month - Month (1-12)
      * @param {number} day - Day of month
+     * @param {string} timeStr - Time string in HH:MM format
      * @param {object} dstInfo - DST info from findDSTTransitions
      * @param {number} year - Year
-     * @returns {boolean} True if date is in DST period
+     * @returns {boolean} True if date/time is in DST period
      */
-    isInDSTPeriod(month, day, dstInfo, year) {
+    isInDSTPeriod(month, day, timeStr, dstInfo, year) {
         if (!dstInfo.hasDST || !dstInfo.start || !dstInfo.end) {
             return false;
         }
 
-        const date = new Date(year, month - 1, day, 12); // Use noon to avoid edge cases
+        // Parse the time to get hours
+        let hour = 12; // Default to noon if no time provided
+        if (timeStr) {
+            const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})$/);
+            if (match) {
+                hour = parseInt(match[1], 10);
+            }
+        }
+
+        const checkDate = new Date(year, month - 1, day, hour, 0, 0);
         const dstStart = dstInfo.start;
         const dstEnd = dstInfo.end;
 
         // Handle both Northern and Southern hemisphere cases
         if (dstStart < dstEnd) {
             // Northern hemisphere: DST is between start and end in same year
-            return date >= dstStart && date < dstEnd;
+            return checkDate >= dstStart && checkDate < dstEnd;
         } else {
             // Southern hemisphere: DST spans year boundary
-            return date >= dstStart || date < dstEnd;
+            return checkDate >= dstStart || checkDate < dstEnd;
         }
     },
 
@@ -192,24 +254,24 @@ const DSTConverter = {
     },
 
     /**
-     * Format a date for display
+     * Format a date for display with time
      * @param {Date|null} date - Date to format
-     * @returns {string} Formatted date string
+     * @returns {string} Formatted date string with time
      */
     formatDate(date) {
         if (!date) return '--';
         
-        const options = {
-            weekday: 'short',
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        };
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         
-        return date.toLocaleDateString('en-GB', options);
+        const dayName = days[date.getDay()];
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        
+        return `${dayName}, ${day} ${month} ${year} at ${hours}:${minutes}`;
     },
 
     /**

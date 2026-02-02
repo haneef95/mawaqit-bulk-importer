@@ -594,6 +594,42 @@
     animation: mawaqit-slideIn 0.3s ease;
 }
 
+.mawaqit-dst-year-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mawaqit-dst-year-input label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+    font-weight: 500;
+}
+
+.mawaqit-dst-year-input input {
+    flex: 1;
+    max-width: 100px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #e4e4e4;
+    font-size: 0.85rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.mawaqit-dst-year-input input:focus {
+    outline: none;
+    border-color: #00d9ff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
 .mawaqit-dst-header {
     margin-bottom: 12px;
 }
