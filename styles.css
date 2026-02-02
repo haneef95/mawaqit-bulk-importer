@@ -1,7 +1,7 @@
 #mawaqit-importer-toggle {
     position: fixed;
     bottom: 20px;
-    right: 20px;
+    left: 20px;
     width: 60px;
     height: 60px;
     background: linear-gradient(135deg, #00d9ff, #00ff88);
@@ -32,7 +32,7 @@
 #mawaqit-importer-panel {
     position: fixed;
     bottom: 100px;
-    right: 20px;
+    left: 20px;
     width: 400px;
     max-width: calc(100vw - 40px);
     max-height: calc(100vh - 140px);
@@ -116,6 +116,8 @@
     overflow-y: auto;
     flex: 1;
     color: #e4e4e4;
+    max-height: calc(100vh - 220px);
+    -webkit-overflow-scrolling: touch;
 }
 
 .mawaqit-section {
@@ -394,11 +396,16 @@
 
 .mawaqit-content::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
 }
 
 .mawaqit-content::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 3px;
+}
+
+.mawaqit-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 /* Advanced Options Section */
@@ -568,16 +575,43 @@
 
 @media (max-width: 480px) {
     #mawaqit-importer-panel {
-        right: 10px;
         left: 10px;
+        right: 10px;
         width: auto;
         bottom: 90px;
+        max-height: calc(100vh - 110px);
     }
 
     #mawaqit-importer-toggle {
-        right: 15px;
+        left: 15px;
         bottom: 15px;
         width: 50px;
         height: 50px;
+    }
+
+    .mawaqit-content {
+        max-height: calc(100vh - 180px);
+        padding: 15px;
+    }
+
+    .mawaqit-threshold-inputs {
+        grid-template-columns: 1fr;
+    }
+
+    .mawaqit-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .mawaqit-file-content {
+        max-height: 100px;
+        font-size: 0.7rem;
+    }
+
+    .mawaqit-header h2 {
+        font-size: 1rem;
+    }
+
+    .mawaqit-section-title {
+        font-size: 0.7rem;
     }
 }
