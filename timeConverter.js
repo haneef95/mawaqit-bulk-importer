@@ -6,17 +6,14 @@
 const TimeConverter = {
     /**
      * Prayer columns and their conversion rules
-     * - Fajr/Shuruk: Always AM (no conversion needed)
-     * - Duhr: Add 12 if hour < 5 (handles 1:30 PM entered as 1:30)
+     * - Fajr/Shuruq: Always AM (no conversion needed)
+     * - Dhuhr: Add 12 if hour < 5 (handles 1:30 PM entered as 1:30)
      * - Asr/Maghrib/Isha: Add 12 if hour < 12
      */
     prayerRules: {
         'fajr': { addTwelve: false },
-        'shuruk': { addTwelve: false },
-        'sunrise': { addTwelve: false },
-        'duhr': { addTwelve: true, threshold: 5 },
+        'shuruq': { addTwelve: false },
         'dhuhr': { addTwelve: true, threshold: 5 },
-        'zuhr': { addTwelve: true, threshold: 5 },
         'asr': { addTwelve: true, threshold: 12 },
         'maghrib': { addTwelve: true, threshold: 12 },
         'isha': { addTwelve: true, threshold: 12 }
@@ -29,11 +26,11 @@ const TimeConverter = {
      */
     getColumnHeaders(calendarType) {
         if (calendarType === 'calendar') {
-            // Athan format: Month, Day, Fajr, Shuruk, Duhr, Asr, Maghrib, Isha
-            return ['month', 'day', 'fajr', 'shuruk', 'duhr', 'asr', 'maghrib', 'isha'];
+            // Athan format: Month, Day, Fajr, Shuruq, Dhuhr, Asr, Maghrib, Isha
+            return ['month', 'day', 'fajr', 'shuruq', 'dhuhr', 'asr', 'maghrib', 'isha'];
         } else {
-            // Iqama format: Month, Day, Fajr, Duhr, Asr, Maghrib, Isha
-            return ['month', 'day', 'fajr', 'duhr', 'asr', 'maghrib', 'isha'];
+            // Iqama format: Month, Day, Fajr, Dhuhr, Asr, Maghrib, Isha (no Shuruq)
+            return ['month', 'day', 'fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
         }
     },
 
@@ -79,7 +76,7 @@ const TimeConverter = {
     /**
      * Convert time to 24-hour format based on prayer type
      * @param {string} timeStr - Input time string
-     * @param {string} prayerName - Name of the prayer (fajr, duhr, asr, etc.)
+     * @param {string} prayerName - Name of the prayer (fajr, dhuhr, asr, etc.)
      * @returns {{value: string, converted: boolean, error: string|null}} Conversion result
      */
     convertTime(timeStr, prayerName) {

@@ -29,7 +29,7 @@ A Chrome extension to bulk import prayer times from CSV files into the Mawaqit c
 
 ### Adhan
 ```csv
-Month,Day,Fajr,Sunrise,Dhuhr,Asr,Maghrib,Isha
+Month,Day,Fajr,Shuruq,Dhuhr,Asr,Maghrib,Isha
 1,1,06:30,08:00,12:30,15:00,17:30,19:00
 1,2,06:29,07:59,12:30,15:01,17:31,19:01
 ```
