@@ -88,6 +88,42 @@
                             </div>
                         </div>
                     </div>
+                    <div class="mawaqit-advanced-option mawaqit-dst-option">
+                        <label class="mawaqit-toggle-label">
+                            <input type="checkbox" id="mawaqit-convert-dst">
+                            <span class="mawaqit-toggle-slider"></span>
+                            <span class="mawaqit-toggle-text">Convert from DST to Standard Time</span>
+                        </label>
+                    </div>
+                    <div class="mawaqit-dst-info" id="mawaqit-dst-info">
+                        <div class="mawaqit-dst-year-input">
+                            <label for="mawaqit-dst-year">Timetable Year:</label>
+                            <input type="number" id="mawaqit-dst-year" value="${new Date().getFullYear()}" min="2000" max="2100">
+                        </div>
+                        <div class="mawaqit-dst-header">
+                            <div class="mawaqit-dst-timezone" id="mawaqit-dst-timezone">
+                                <span class="mawaqit-dst-label">Timezone:</span>
+                                <span class="mawaqit-dst-value" id="mawaqit-dst-tz-value">--</span>
+                            </div>
+                        </div>
+                        <div class="mawaqit-dst-period">
+                            <div class="mawaqit-dst-label">DST Period:</div>
+                            <div class="mawaqit-dst-dates">
+                                <div class="mawaqit-dst-date-item">
+                                    <span class="mawaqit-dst-date-label">Start:</span>
+                                    <span class="mawaqit-dst-date-value" id="mawaqit-dst-start">--</span>
+                                </div>
+                                <div class="mawaqit-dst-date-item">
+                                    <span class="mawaqit-dst-date-label">End:</span>
+                                    <span class="mawaqit-dst-date-value" id="mawaqit-dst-end">--</span>
+                                </div>
+                            </div>
+                            <div class="mawaqit-dst-offset">
+                                <span class="mawaqit-dst-label">DST Offset:</span>
+                                <span class="mawaqit-dst-value" id="mawaqit-dst-offset-value">--</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -207,11 +243,15 @@
             rowsProcessed: 0,
             fieldsUpdated: 0,
             timesConverted: 0,
+            dstConverted: 0,
             errors: []
         };
 
         const settings = getConversionSettings();
         const prayerRules = TimeConverter.getPrayerRules(settings.thresholds, settings.disableConversion);
+        
+        // Get DST settings
+        const dstSettings = window.mawaqitDSTSettings ? window.mawaqitDSTSettings() : { enabled: false };
 
         const rows = csvContent
             .trim()
@@ -226,7 +266,8 @@
             if (!columns[0]?.trim()) continue;
 
             stats.rowsProcessed++;
-            const monthIndex = parseInt(columns[0], 10) - 1;
+            const month = parseInt(columns[0], 10);
+            const monthIndex = month - 1;
             const dayOfMonth = parseInt(columns[1], 10);
 
             // Convert times from 12hr to 24hr format based on prayer context
@@ -237,7 +278,20 @@
             for (let colIndex = 2; colIndex < converted.columns.length; colIndex++) {
                 const cellIndex = colIndex - 1;
                 const fieldName = `configuration[${calendarType}][${monthIndex}][${dayOfMonth}][${cellIndex}]`;
-                const timeValue = converted.columns[colIndex]?.trim();
+                let timeValue = converted.columns[colIndex]?.trim();
+
+                // Check if this specific time is in DST period (including hour check for boundary days)
+                const needsDSTConversion = dstSettings.enabled && timeValue &&
+                    DSTConverter.isInDSTPeriod(month, dayOfMonth, timeValue, dstSettings.dstInfo, dstSettings.year);
+
+                // Apply DST to Standard conversion if needed
+                if (needsDSTConversion) {
+                    const originalTime = timeValue;
+                    timeValue = DSTConverter.convertDSTToStandard(timeValue, dstSettings.dstInfo.offset);
+                    if (timeValue !== originalTime) {
+                        stats.dstConverted++;
+                    }
+                }
 
                 try {
                     const inputElement = document.getElementsByName(fieldName)[0];
@@ -259,6 +313,13 @@
         document.getElementById('mawaqit-filename').textContent = file.name;
         document.getElementById('mawaqit-filesize').textContent = formatFileSize(file.size);
         document.getElementById('mawaqit-filecontent').textContent = content;
+        const dstStatHtml = stats.dstConverted > 0 ? `
+            <div class="mawaqit-stat-card">
+                <div class="mawaqit-stat-value">${stats.dstConverted}</div>
+                <div class="mawaqit-stat-label">DST Adjusted</div>
+            </div>
+        ` : '';
+        
         document.getElementById('mawaqit-stats').innerHTML = `
             <div class="mawaqit-stat-card">
                 <div class="mawaqit-stat-value">${stats.rowsProcessed}</div>
@@ -272,6 +333,7 @@
                 <div class="mawaqit-stat-value">${stats.timesConverted || 0}</div>
                 <div class="mawaqit-stat-label">Converted</div>
             </div>
+            ${dstStatHtml}
             <div class="mawaqit-stat-card">
                 <div class="mawaqit-stat-value">${stats.errors.length}</div>
                 <div class="mawaqit-stat-label">Errors</div>
@@ -392,6 +454,79 @@
     // Initialize thresholds state
     thresholdsSection.classList.toggle('disabled', !convert24hrToggle.checked);
 
-    console.log('✅ Mawaqit Bulk Calendar Importer extension loaded');
+    // DST Conversion Toggle
+    const convertDSTToggle = document.getElementById('mawaqit-convert-dst');
+    const dstInfoSection = document.getElementById('mawaqit-dst-info');
+    const dstYearInput = document.getElementById('mawaqit-dst-year');
+    let currentDSTInfo = null;
+    let currentDSTYear = new Date().getFullYear();
+
+    convertDSTToggle.addEventListener('change', () => {
+        dstInfoSection.classList.toggle('show', convertDSTToggle.checked);
+        
+        if (convertDSTToggle.checked) {
+            updateDSTInfo();
+        }
+    });
+
+    // Update DST info when year changes
+    dstYearInput.addEventListener('change', () => {
+        if (convertDSTToggle.checked) {
+            updateDSTInfo();
+        }
+    });
+
+    function updateDSTInfo() {
+        const timezone = DSTConverter.getTimezoneFromPage();
+        const tzValueEl = document.getElementById('mawaqit-dst-tz-value');
+        const dstStartEl = document.getElementById('mawaqit-dst-start');
+        const dstEndEl = document.getElementById('mawaqit-dst-end');
+        const dstOffsetEl = document.getElementById('mawaqit-dst-offset-value');
+
+        if (!timezone) {
+            tzValueEl.textContent = 'Not found on page';
+            dstStartEl.textContent = '--';
+            dstEndEl.textContent = '--';
+            dstOffsetEl.textContent = '--';
+            currentDSTInfo = null;
+            return;
+        }
+
+        tzValueEl.textContent = timezone;
+        
+        // Get DST info for the selected year
+        currentDSTYear = parseInt(dstYearInput.value, 10) || new Date().getFullYear();
+        currentDSTInfo = DSTConverter.findDSTTransitions(timezone, currentDSTYear);
+
+        if (currentDSTInfo.hasDST) {
+            dstStartEl.textContent = DSTConverter.formatDate(currentDSTInfo.start);
+            dstEndEl.textContent = DSTConverter.formatDate(currentDSTInfo.end);
+            dstOffsetEl.textContent = DSTConverter.formatOffset(currentDSTInfo.offset);
+        } else {
+            dstStartEl.textContent = 'No DST';
+            dstEndEl.textContent = 'No DST';
+            dstOffsetEl.textContent = 'None';
+        }
+    }
+
+    // Store DST info globally for use in parsing
+    function getDSTSettings() {
+        const convertDST = document.getElementById('mawaqit-convert-dst')?.checked ?? false;
+        
+        if (!convertDST || !currentDSTInfo || !currentDSTInfo.hasDST) {
+            return { enabled: false };
+        }
+
+        return {
+            enabled: true,
+            dstInfo: currentDSTInfo,
+            year: currentDSTYear
+        };
+    }
+
+    // Make getDSTSettings available to parseMawaqitCSV
+    window.mawaqitDSTSettings = getDSTSettings;
+
+    console.log('Mawaqit Bulk Calendar Importer extension loaded');
 
 })();

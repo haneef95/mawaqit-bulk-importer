@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Mawaqit Bulk Calendar Importer",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "Bulk import prayer times from CSV files into Mawaqit calendar",
   "author": "You",
   "permissions": [],
@@ -15,7 +15,7 @@
         "*://mawaqit.net/*/configure*",
         "*://*.mawaqit.net/*/configure*"
       ],
-      "js": ["timeConverter.js", "content.js"],
+      "js": ["timeConverter.js", "dstConverter.js", "content.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"
     }
