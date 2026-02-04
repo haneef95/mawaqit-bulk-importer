@@ -591,7 +591,7 @@
             const response = await fetch(url, {
                 method: 'GET',
                 cache: 'default',
-                credentials: 'omit',
+                credentials: 'include', // Send cookies for authenticated requests
                 redirect: 'manual' // Don't auto-follow redirects
             });
 
