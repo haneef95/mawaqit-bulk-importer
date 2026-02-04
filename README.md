@@ -2,6 +2,9 @@
 
 A Chrome extension to bulk import prayer times from CSV files into the Mawaqit calendar configuration page.
 
+Screenshot:
+![Screenshot of the extension in the configure page.](images/Screenshot.png)
+
 ## ✨ Features
 
 - 📅 **Bulk Import** - Import Athan or Iqama times for any or all days in the year in a single CSV
