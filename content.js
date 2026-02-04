@@ -128,6 +128,24 @@
             </div>
 
             <div class="mawaqit-section">
+                <div class="mawaqit-section-title">Import from URL</div>
+                <div class="mawaqit-url-input-group">
+                    <input type="url" id="mawaqit-url-input" placeholder="https://example.com/timetable.csv" autocomplete="url">
+                    <button type="button" id="mawaqit-url-fetch-btn" class="mawaqit-fetch-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4.03-3-9s1.34-9 3-9m-9 9a9 9 0 0 1 9-9"/>
+                        </svg>
+                        Fetch
+                    </button>
+                </div>
+                <div class="mawaqit-url-hint">Enter a direct link to a CSV file</div>
+            </div>
+
+            <div class="mawaqit-section-divider">
+                <span>or</span>
+            </div>
+
+            <div class="mawaqit-section">
                 <div class="mawaqit-section-title">Upload CSV</div>
                 <div class="mawaqit-file-upload" id="mawaqit-dropzone">
                     <input type="file" id="mawaqit-file-input" accept=".csv,.txt">
@@ -204,12 +222,16 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    function showMessage(text, type = 'info') {
+    function showMessage(text, type = 'info', isHtml = false) {
         const msgEl = document.getElementById('mawaqit-message');
         const msgText = document.getElementById('mawaqit-msg-text');
         const msgIcon = document.getElementById('mawaqit-msg-icon');
 
-        msgText.textContent = text;
+        if (isHtml) {
+            msgText.innerHTML = text;
+        } else {
+            msgText.textContent = text;
+        }
         msgEl.className = `mawaqit-message show ${type}`;
 
         const icons = {
@@ -431,6 +453,240 @@
                 handleFileSelection({ target: fileInput });
             }
         });
+
+    // URL Fetch handler
+    async function handleURLFetch() {
+        const urlInput = document.getElementById('mawaqit-url-input');
+        const fetchBtn = document.getElementById('mawaqit-url-fetch-btn');
+        const fileInfo = document.getElementById('mawaqit-file-info');
+        const processing = document.getElementById('mawaqit-processing');
+        const message = document.getElementById('mawaqit-message');
+
+        const url = urlInput.value.trim();
+
+        fileInfo.classList.remove('show');
+        message.classList.remove('show');
+
+        if (!url) {
+            showMessage('Please enter a URL.', 'error');
+            return;
+        }
+
+        // Basic URL validation
+        try {
+            new URL(url);
+        } catch {
+            showMessage('Please enter a valid URL.', 'error');
+            return;
+        }
+
+        const calendarType = document.querySelector('input[name="mawaqit-cal-type"]:checked')?.value;
+        if (!calendarType) {
+            showMessage('Please select a calendar type.', 'error');
+            return;
+        }
+
+        // Disable button and show processing
+        fetchBtn.disabled = true;
+        fetchBtn.classList.add('loading');
+        processing.classList.add('show');
+
+        try {
+            const result = await fetchCSVWithFallback(url);
+
+            if (!result.content.trim()) {
+                throw new Error('The URL returned empty content.');
+            }
+
+            processing.classList.remove('show');
+
+            // Process the CSV content
+            const stats = parseMawaqitCSV(result.content, calendarType);
+
+            // Create a pseudo-file object for display
+            // Use filename from Content-Disposition header, fallback to URL extraction
+            const filename = result.filename || extractFilename(url);
+            const pseudoFile = {
+                name: filename,
+                size: new Blob([result.content]).size
+            };
+
+            showFileInfo(pseudoFile, result.content, stats);
+
+            if (stats.errors.length > 0) {
+                showMessage(`Done with ${stats.errors.length} warning(s).`, 'info');
+                console.warn('CSV Warnings:', stats.errors);
+            } else {
+                showMessage(`Updated ${stats.fieldsUpdated} fields from ${stats.rowsProcessed} rows.`, 'success');
+            }
+        } catch (error) {
+            processing.classList.remove('show');
+            
+            // Check if error contains HTML (for auth redirect messages with links)
+            if (error.isHtml) {
+                showMessage(error.message, 'error', true);
+            } else {
+                showMessage(`Error: ${error.message}`, 'error');
+            }
+            console.error('URL Fetch Error:', error);
+        } finally {
+            fetchBtn.disabled = false;
+            fetchBtn.classList.remove('loading');
+        }
+    }
+
+    // Extract a reasonable filename from URL
+    function extractFilename(url) {
+        try {
+            const urlObj = new URL(url);
+            // Handle Google Sheets URLs
+            if (urlObj.hostname.includes('docs.google.com')) {
+                const gidMatch = urlObj.searchParams.get('gid');
+                return gidMatch ? `sheet-${gidMatch}.csv` : 'google-sheet.csv';
+            }
+            // Default: extract from path
+            return urlObj.pathname.split('/').pop()?.split('?')[0] || 'remote.csv';
+        } catch {
+            return 'remote.csv';
+        }
+    }
+
+    // Parse filename from Content-Disposition header
+    function parseContentDisposition(header) {
+        if (!header) return null;
+        
+        // Try to match filename*= (RFC 5987 encoded) first
+        const encodedMatch = header.match(/filename\*=(?:UTF-8''|utf-8'')([^;]+)/i);
+        if (encodedMatch) {
+            try {
+                return decodeURIComponent(encodedMatch[1]);
+            } catch {
+                // Fall through to try other patterns
+            }
+        }
+        
+        // Try to match filename="..." (quoted)
+        const quotedMatch = header.match(/filename="([^"]+)"/i);
+        if (quotedMatch) {
+            return quotedMatch[1];
+        }
+        
+        // Try to match filename=... (unquoted)
+        const unquotedMatch = header.match(/filename=([^;\s]+)/i);
+        if (unquotedMatch) {
+            return unquotedMatch[1];
+        }
+        
+        return null;
+    }
+
+    // Fetch CSV with redirect detection and fallback strategy
+    // Returns { content: string, filename: string|null }
+    async function fetchCSVWithFallback(url) {
+        const urlObj = new URL(url);
+        const isGoogleSheets = urlObj.hostname.includes('docs.google.com');
+
+        // Strategy 1: Try with manual redirect handling to detect auth redirects
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                cache: 'default',
+                credentials: 'include', // Send cookies for authenticated requests
+                redirect: 'manual' // Don't auto-follow redirects
+            });
+
+            // Check for redirect (opaqueredirect or status 0 indicates redirect was intercepted)
+            if (response.type === 'opaqueredirect' || response.status === 0) {
+                // Redirect detected - likely authentication required
+                if (isGoogleSheets) {
+                    const error = new Error(
+                        'This Google Sheet requires authentication or is not publicly shared.<br><br>' +
+                        'Please either:<br>' +
+                        '1. Make the sheet publicly viewable ("Anyone with the link"), or<br>' +
+                        '2. <a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">Click here</a> ' +
+                        'to download the CSV in a new tab and manually upload it using the file upload option below.'
+                    );
+                    error.isHtml = true;
+                    throw error;
+                }
+                throw new Error('The server redirected the request. Authentication may be required.');
+            }
+
+            if (response.ok) {
+                const content = await response.text();
+                const filename = parseContentDisposition(response.headers.get('Content-Disposition'));
+                return { content, filename };
+            }
+
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        } catch (error) {
+            // Re-throw HTML errors as-is
+            if (error.isHtml) {
+                throw error;
+            }
+
+            // If first attempt failed with network error, try with follow redirect
+            if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                console.log('Manual redirect fetch failed, trying with auto-follow...', error.message);
+            } else {
+                throw error;
+            }
+        }
+
+        // Strategy 2: Fallback - try with auto-follow redirects (for servers that don't trigger CORS on redirect)
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                cache: 'default',
+                credentials: 'omit',
+                redirect: 'follow'
+            });
+
+            if (response.ok) {
+                const content = await response.text();
+                const filename = parseContentDisposition(response.headers.get('Content-Disposition'));
+                return { content, filename };
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        } catch (secondError) {
+            // Provide helpful error messages
+            if (isGoogleSheets) {
+                const error = new Error(
+                    'Cannot access this Google Sheet.<br><br>' +
+                    'Please either:<br>' +
+                    '1. Make the sheet publicly viewable ("Anyone with the link"), or<br>' +
+                    '2. <a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">Click here</a> ' +
+                    'to download the CSV in a new tab and manually upload it using the file upload option below.'
+                );
+                error.isHtml = true;
+                throw error;
+            }
+            
+            if (secondError.message.includes('Failed to fetch')) {
+                throw new Error('Failed to fetch. The server may block cross-origin requests (CORS).');
+            }
+            
+            throw secondError;
+        }
+    }
+
+    // Helper to escape HTML special characters for safe insertion into HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // URL fetch button click handler
+    document.getElementById('mawaqit-url-fetch-btn').addEventListener('click', handleURLFetch);
+
+    // Allow Enter key to trigger fetch
+    document.getElementById('mawaqit-url-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleURLFetch();
+        }
+    });
 
     // Advanced Options Toggle
     const advancedToggle = document.getElementById('mawaqit-advanced-toggle');
