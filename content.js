@@ -488,18 +488,7 @@
         processing.classList.add('show');
 
         try {
-            // Use browser fetch which includes browser cache
-            const response = await fetch(url, {
-                method: 'GET',
-                cache: 'default', // Use browser's default caching behavior
-               // credentials: 'omit' // Don't send credentials to avoid auth issues
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const content = await response.text();
+            const content = await fetchCSVWithFallback(url);
 
             if (!content.trim()) {
                 throw new Error('The URL returned empty content.');
@@ -511,7 +500,7 @@
             const stats = parseMawaqitCSV(content, calendarType);
 
             // Create a pseudo-file object for display
-            const filename = url.split('/').pop()?.split('?')[0] || 'remote.csv';
+            const filename = extractFilename(url);
             const pseudoFile = {
                 name: filename,
                 size: new Blob([content]).size
@@ -527,18 +516,78 @@
             }
         } catch (error) {
             processing.classList.remove('show');
-            
-            // Provide user-friendly error messages
-            let errorMessage = error.message;
-            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                errorMessage = 'Failed to fetch. The server may block cross-origin requests (CORS).';
-            }
-            
-            showMessage(`Error: ${errorMessage}`, 'error');
+            showMessage(`Error: ${error.message}`, 'error');
             console.error('URL Fetch Error:', error);
         } finally {
             fetchBtn.disabled = false;
             fetchBtn.classList.remove('loading');
+        }
+    }
+
+    // Extract a reasonable filename from URL
+    function extractFilename(url) {
+        try {
+            const urlObj = new URL(url);
+            // Handle Google Sheets URLs
+            if (urlObj.hostname.includes('docs.google.com')) {
+                const gidMatch = urlObj.searchParams.get('gid');
+                return gidMatch ? `sheet-${gidMatch}.csv` : 'google-sheet.csv';
+            }
+            // Default: extract from path
+            return urlObj.pathname.split('/').pop()?.split('?')[0] || 'remote.csv';
+        } catch {
+            return 'remote.csv';
+        }
+    }
+
+    // Fetch CSV with credentials fallback strategy
+    async function fetchCSVWithFallback(url) {
+        // Strategy 1: Try with credentials (for authenticated services like Google Sheets)
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                cache: 'default',
+                credentials: 'include' // Send cookies for authenticated requests
+            });
+
+            if (response.ok) {
+                return await response.text();
+            }
+            // If we get a non-OK response, throw to try fallback
+            throw new Error(`HTTP ${response.status}`);
+        } catch (firstError) {
+            console.log('Fetch with credentials failed, trying without...', firstError.message);
+        }
+
+        // Strategy 2: Try without credentials (for public URLs that reject credentialed requests)
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                cache: 'default',
+                credentials: 'omit' // Don't send cookies
+            });
+
+            if (response.ok) {
+                return await response.text();
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        } catch (secondError) {
+            // Both strategies failed - provide helpful error message
+            const urlObj = new URL(url);
+            
+            if (urlObj.hostname.includes('docs.google.com')) {
+                throw new Error(
+                    'Cannot access Google Sheet. Please ensure:\n' +
+                    '1. The sheet is shared (at least "Anyone with the link can view")\n' +
+                    '2. You are signed into Google in this browser'
+                );
+            }
+            
+            if (secondError.message.includes('Failed to fetch')) {
+                throw new Error('Failed to fetch. The server may block cross-origin requests (CORS).');
+            }
+            
+            throw secondError;
         }
     }
 
