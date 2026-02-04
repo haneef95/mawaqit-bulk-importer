@@ -128,6 +128,24 @@
             </div>
 
             <div class="mawaqit-section">
+                <div class="mawaqit-section-title">Import from URL</div>
+                <div class="mawaqit-url-input-group">
+                    <input type="url" id="mawaqit-url-input" placeholder="https://example.com/timetable.csv" autocomplete="url">
+                    <button type="button" id="mawaqit-url-fetch-btn" class="mawaqit-fetch-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4.03-3-9s1.34-9 3-9m-9 9a9 9 0 0 1 9-9"/>
+                        </svg>
+                        Fetch
+                    </button>
+                </div>
+                <div class="mawaqit-url-hint">Enter a direct link to a CSV file</div>
+            </div>
+
+            <div class="mawaqit-section-divider">
+                <span>or</span>
+            </div>
+
+            <div class="mawaqit-section">
                 <div class="mawaqit-section-title">Upload CSV</div>
                 <div class="mawaqit-file-upload" id="mawaqit-dropzone">
                     <input type="file" id="mawaqit-file-input" accept=".csv,.txt">
@@ -431,6 +449,109 @@
                 handleFileSelection({ target: fileInput });
             }
         });
+
+    // URL Fetch handler
+    async function handleURLFetch() {
+        const urlInput = document.getElementById('mawaqit-url-input');
+        const fetchBtn = document.getElementById('mawaqit-url-fetch-btn');
+        const fileInfo = document.getElementById('mawaqit-file-info');
+        const processing = document.getElementById('mawaqit-processing');
+        const message = document.getElementById('mawaqit-message');
+
+        const url = urlInput.value.trim();
+
+        fileInfo.classList.remove('show');
+        message.classList.remove('show');
+
+        if (!url) {
+            showMessage('Please enter a URL.', 'error');
+            return;
+        }
+
+        // Basic URL validation
+        try {
+            new URL(url);
+        } catch {
+            showMessage('Please enter a valid URL.', 'error');
+            return;
+        }
+
+        const calendarType = document.querySelector('input[name="mawaqit-cal-type"]:checked')?.value;
+        if (!calendarType) {
+            showMessage('Please select a calendar type.', 'error');
+            return;
+        }
+
+        // Disable button and show processing
+        fetchBtn.disabled = true;
+        fetchBtn.classList.add('loading');
+        processing.classList.add('show');
+
+        try {
+            // Use browser fetch which includes browser cache
+            const response = await fetch(url, {
+                method: 'GET',
+                cache: 'default', // Use browser's default caching behavior
+               // credentials: 'omit' // Don't send credentials to avoid auth issues
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const content = await response.text();
+
+            if (!content.trim()) {
+                throw new Error('The URL returned empty content.');
+            }
+
+            processing.classList.remove('show');
+
+            // Process the CSV content
+            const stats = parseMawaqitCSV(content, calendarType);
+
+            // Create a pseudo-file object for display
+            const filename = url.split('/').pop()?.split('?')[0] || 'remote.csv';
+            const pseudoFile = {
+                name: filename,
+                size: new Blob([content]).size
+            };
+
+            showFileInfo(pseudoFile, content, stats);
+
+            if (stats.errors.length > 0) {
+                showMessage(`Done with ${stats.errors.length} warning(s).`, 'info');
+                console.warn('CSV Warnings:', stats.errors);
+            } else {
+                showMessage(`Updated ${stats.fieldsUpdated} fields from ${stats.rowsProcessed} rows.`, 'success');
+            }
+        } catch (error) {
+            processing.classList.remove('show');
+            
+            // Provide user-friendly error messages
+            let errorMessage = error.message;
+            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                errorMessage = 'Failed to fetch. The server may block cross-origin requests (CORS).';
+            }
+            
+            showMessage(`Error: ${errorMessage}`, 'error');
+            console.error('URL Fetch Error:', error);
+        } finally {
+            fetchBtn.disabled = false;
+            fetchBtn.classList.remove('loading');
+        }
+    }
+
+    // URL fetch button click handler
+    document.getElementById('mawaqit-url-fetch-btn').addEventListener('click', handleURLFetch);
+
+    // Allow Enter key to trigger fetch
+    document.getElementById('mawaqit-url-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleURLFetch();
+        }
+    });
 
     // Advanced Options Toggle
     const advancedToggle = document.getElementById('mawaqit-advanced-toggle');
