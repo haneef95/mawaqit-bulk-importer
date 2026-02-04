@@ -331,7 +331,7 @@
     border-radius: 8px;
     margin-bottom: 15px;
     display: none;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     font-size: 0.85rem;
     animation: mawaqit-slideIn 0.3s ease;
@@ -339,6 +339,16 @@
 
 .mawaqit-message.show {
     display: flex;
+}
+
+.mawaqit-message a {
+    color: #00d9ff;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.mawaqit-message a:hover {
+    color: #00ff88;
 }
 
 .mawaqit-message.error {

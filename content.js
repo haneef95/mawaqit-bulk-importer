@@ -222,12 +222,16 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    function showMessage(text, type = 'info') {
+    function showMessage(text, type = 'info', isHtml = false) {
         const msgEl = document.getElementById('mawaqit-message');
         const msgText = document.getElementById('mawaqit-msg-text');
         const msgIcon = document.getElementById('mawaqit-msg-icon');
 
-        msgText.textContent = text;
+        if (isHtml) {
+            msgText.innerHTML = text;
+        } else {
+            msgText.textContent = text;
+        }
         msgEl.className = `mawaqit-message show ${type}`;
 
         const icons = {
@@ -516,7 +520,13 @@
             }
         } catch (error) {
             processing.classList.remove('show');
-            showMessage(`Error: ${error.message}`, 'error');
+            
+            // Check if error contains HTML (for auth redirect messages with links)
+            if (error.isHtml) {
+                showMessage(error.message, 'error', true);
+            } else {
+                showMessage(`Error: ${error.message}`, 'error');
+            }
             console.error('URL Fetch Error:', error);
         } finally {
             fetchBtn.disabled = false;
@@ -540,31 +550,63 @@
         }
     }
 
-    // Fetch CSV with credentials fallback strategy
+    // Fetch CSV with redirect detection and fallback strategy
     async function fetchCSVWithFallback(url) {
-        // Strategy 1: Try with credentials (for authenticated services like Google Sheets)
+        const urlObj = new URL(url);
+        const isGoogleSheets = urlObj.hostname.includes('docs.google.com');
+
+        // Strategy 1: Try with manual redirect handling to detect auth redirects
         try {
             const response = await fetch(url, {
                 method: 'GET',
                 cache: 'default',
-                credentials: 'include' // Send cookies for authenticated requests
+                credentials: 'include', // Send cookies for authenticated requests
+                redirect: 'manual' // Don't auto-follow redirects
             });
+
+            // Check for redirect (opaqueredirect or status 0 indicates redirect was intercepted)
+            if (response.type === 'opaqueredirect' || response.status === 0) {
+                // Redirect detected - likely authentication required
+                if (isGoogleSheets) {
+                    const error = new Error(
+                        'This Google Sheet requires authentication or is not publicly shared.<br><br>' +
+                        'Please either:<br>' +
+                        '1. Make the sheet publicly viewable ("Anyone with the link"), or<br>' +
+                        '2. <a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">Click here</a> ' +
+                        'to download the CSV in a new tab and manually upload it using the file upload option below.'
+                    );
+                    error.isHtml = true;
+                    throw error;
+                }
+                throw new Error('The server redirected the request. Authentication may be required.');
+            }
 
             if (response.ok) {
                 return await response.text();
             }
-            // If we get a non-OK response, throw to try fallback
-            throw new Error(`HTTP ${response.status}`);
-        } catch (firstError) {
-            console.log('Fetch with credentials failed, trying without...', firstError.message);
+
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        } catch (error) {
+            // Re-throw HTML errors as-is
+            if (error.isHtml) {
+                throw error;
+            }
+
+            // If first attempt failed with network error, try with follow redirect
+            if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                console.log('Manual redirect fetch failed, trying with auto-follow...', error.message);
+            } else {
+                throw error;
+            }
         }
 
-        // Strategy 2: Try without credentials (for public URLs that reject credentialed requests)
+        // Strategy 2: Fallback - try with auto-follow redirects (for servers that don't trigger CORS on redirect)
         try {
             const response = await fetch(url, {
                 method: 'GET',
                 cache: 'default',
-                credentials: 'omit' // Don't send cookies
+                credentials: 'omit',
+                redirect: 'follow'
             });
 
             if (response.ok) {
@@ -572,15 +614,17 @@
             }
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         } catch (secondError) {
-            // Both strategies failed - provide helpful error message
-            const urlObj = new URL(url);
-            
-            if (urlObj.hostname.includes('docs.google.com')) {
-                throw new Error(
-                    'Cannot access Google Sheet. Please ensure:\n' +
-                    '1. The sheet is shared (at least "Anyone with the link can view")\n' +
-                    '2. You are signed into Google in this browser'
+            // Provide helpful error messages
+            if (isGoogleSheets) {
+                const error = new Error(
+                    'Cannot access this Google Sheet.<br><br>' +
+                    'Please either:<br>' +
+                    '1. Make the sheet publicly viewable ("Anyone with the link"), or<br>' +
+                    '2. <a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">Click here</a> ' +
+                    'to download the CSV in a new tab and manually upload it using the file upload option below.'
                 );
+                error.isHtml = true;
+                throw error;
             }
             
             if (secondError.message.includes('Failed to fetch')) {
@@ -589,6 +633,13 @@
             
             throw secondError;
         }
+    }
+
+    // Helper to escape HTML special characters for safe insertion into HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     // URL fetch button click handler
