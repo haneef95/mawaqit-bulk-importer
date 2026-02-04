@@ -492,25 +492,26 @@
         processing.classList.add('show');
 
         try {
-            const content = await fetchCSVWithFallback(url);
+            const result = await fetchCSVWithFallback(url);
 
-            if (!content.trim()) {
+            if (!result.content.trim()) {
                 throw new Error('The URL returned empty content.');
             }
 
             processing.classList.remove('show');
 
             // Process the CSV content
-            const stats = parseMawaqitCSV(content, calendarType);
+            const stats = parseMawaqitCSV(result.content, calendarType);
 
             // Create a pseudo-file object for display
-            const filename = extractFilename(url);
+            // Use filename from Content-Disposition header, fallback to URL extraction
+            const filename = result.filename || extractFilename(url);
             const pseudoFile = {
                 name: filename,
-                size: new Blob([content]).size
+                size: new Blob([result.content]).size
             };
 
-            showFileInfo(pseudoFile, content, stats);
+            showFileInfo(pseudoFile, result.content, stats);
 
             if (stats.errors.length > 0) {
                 showMessage(`Done with ${stats.errors.length} warning(s).`, 'info');
@@ -550,7 +551,37 @@
         }
     }
 
+    // Parse filename from Content-Disposition header
+    function parseContentDisposition(header) {
+        if (!header) return null;
+        
+        // Try to match filename*= (RFC 5987 encoded) first
+        const encodedMatch = header.match(/filename\*=(?:UTF-8''|utf-8'')([^;]+)/i);
+        if (encodedMatch) {
+            try {
+                return decodeURIComponent(encodedMatch[1]);
+            } catch {
+                // Fall through to try other patterns
+            }
+        }
+        
+        // Try to match filename="..." (quoted)
+        const quotedMatch = header.match(/filename="([^"]+)"/i);
+        if (quotedMatch) {
+            return quotedMatch[1];
+        }
+        
+        // Try to match filename=... (unquoted)
+        const unquotedMatch = header.match(/filename=([^;\s]+)/i);
+        if (unquotedMatch) {
+            return unquotedMatch[1];
+        }
+        
+        return null;
+    }
+
     // Fetch CSV with redirect detection and fallback strategy
+    // Returns { content: string, filename: string|null }
     async function fetchCSVWithFallback(url) {
         const urlObj = new URL(url);
         const isGoogleSheets = urlObj.hostname.includes('docs.google.com');
@@ -560,7 +591,7 @@
             const response = await fetch(url, {
                 method: 'GET',
                 cache: 'default',
-                credentials: 'include', // Send cookies for authenticated requests
+                credentials: 'omit',
                 redirect: 'manual' // Don't auto-follow redirects
             });
 
@@ -582,7 +613,9 @@
             }
 
             if (response.ok) {
-                return await response.text();
+                const content = await response.text();
+                const filename = parseContentDisposition(response.headers.get('Content-Disposition'));
+                return { content, filename };
             }
 
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -610,7 +643,9 @@
             });
 
             if (response.ok) {
-                return await response.text();
+                const content = await response.text();
+                const filename = parseContentDisposition(response.headers.get('Content-Disposition'));
+                return { content, filename };
             }
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         } catch (secondError) {
