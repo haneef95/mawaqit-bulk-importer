@@ -8,6 +8,7 @@ Screenshot:
 ## ✨ Features
 
 - 📅 **Bulk Import** - Import Athan or Iqama times for any or all days in the year in a single CSV
+- 🌐 **Import from URL** - Fetch CSV directly from a URL (supports Google Sheets and other sources)
 - 📁 **Drag & Drop** - Easy CSV upload with drag and drop support
 - 🔄 **12hr to 24hr Conversion** - Automatically converts 12-hour format times to 24-hour format
 - 🌐 **DST to Standard Time Conversion** - Convert Daylight Saving Time to Standard Time automatically
@@ -33,7 +34,43 @@ Screenshot:
 2. Click the calendar button in the bottom left corner
 3. Select calendar type (**Athan** or **Iqama**)
 4. *(Optional)* Configure Advanced Options
-5. Upload your CSV file
+5. Either:
+   - **Import from URL**: Paste a CSV URL and click **Fetch**, or
+   - **Upload a file**: Drag & drop or click to browse for a CSV file
+
+---
+
+## 🌐 Import from URL
+
+Fetch CSV data directly from a URL without downloading the file first.
+
+### Supported Sources
+
+- **Google Sheets** - Use the CSV export URL format:
+  ```
+  https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}
+  ```
+- **Direct CSV links** - Any publicly accessible CSV file URL
+- **Other sources** - Any URL that returns CSV content
+
+### Google Sheets Setup
+
+1. Open your Google Sheet
+2. Go to **File > Share > Publish to web**
+3. Select the sheet tab and choose **Comma-separated values (.csv)**
+4. Click **Publish** and copy the URL
+5. Alternatively, use the export URL format above with your sheet ID and gid
+
+### Authentication & Access
+
+- **Public sheets**: Work automatically with direct fetch
+- **Restricted sheets**: If authentication is required, the extension will detect this and provide a link to download the CSV manually in a new tab, which you can then upload using the file upload option
+
+### Features
+
+- 📦 **Browser caching** - Uses browser's default cache for repeated fetches
+- 📝 **Auto filename detection** - Extracts filename from `Content-Disposition` header when available
+- 🔄 **Redirect detection** - Gracefully handles authentication redirects with helpful guidance
 
 ---
 
